@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -8,7 +8,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, NgOptimizedImage],
   template: `
     <div class="login-wrapper">
       <!-- Background Ambient Glows -->
@@ -30,9 +30,12 @@ import { SupabaseService } from '../../core/services/supabase.service';
 
           <div class="logo-box">
             <img 
-              src="https://whlxncobakktxghxdyfw.supabase.co/storage/v1/object/public/general/logoDasfusionDegradado.webp" 
+              ngSrc="https://whlxncobakktxghxdyfw.supabase.co/storage/v1/object/public/general/logoDasfusionDegradado.webp" 
               alt="DASFusion Logo" 
               class="login-logo-img" 
+              width="54"
+              height="54"
+              priority
             />
           </div>
 

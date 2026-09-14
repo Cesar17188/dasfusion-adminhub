@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SupabaseService } from '../../core/services/supabase.service';
 import { ProjectService } from '../../core/services/project.service';
@@ -11,16 +11,19 @@ import { LayoutService } from '../../core/services/layout.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NgOptimizedImage],
   template: `
     <aside class="df-sidebar">
       <!-- Brand Logo Header with Mobile Close -->
       <div class="sidebar-brand">
         <div class="brand-left">
           <img 
-            src="https://whlxncobakktxghxdyfw.supabase.co/storage/v1/object/public/general/logoDasfusionDegradado.webp" 
+            ngSrc="https://whlxncobakktxghxdyfw.supabase.co/storage/v1/object/public/general/logoDasfusionDegradado.webp" 
             alt="DASFusion Logo" 
             class="brand-logo-img" 
+            width="36"
+            height="36"
+            priority
           />
           <div class="brand-text">
             <span class="brand-name">DAS<span class="brand-highlight">FUSION</span></span>
