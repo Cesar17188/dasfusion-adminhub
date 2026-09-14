@@ -409,17 +409,38 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
       justify-content: space-between;
     }
 
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+
     .page-tag {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
@@ -429,17 +450,25 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
 
     .controls-bar {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.25rem;
-      gap: 1rem;
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1rem;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+      .controls-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+      }
     }
 
     .search-box {
       position: relative;
       flex: 1;
-      min-width: 250px;
+      width: 100%;
     }
 
     .search-icon {
@@ -457,12 +486,20 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
     .filters-group {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .filters-group {
+        width: auto;
+      }
     }
 
     .filter-select {
-      width: auto;
-      min-width: 170px;
+      flex: 1;
+      min-width: 140px;
     }
 
     .view-toggle {
@@ -487,8 +524,14 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
 
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: 1fr;
       gap: 1.25rem;
+    }
+
+    @media (min-width: 640px) {
+      .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      }
     }
 
     .project-card {
@@ -561,6 +604,8 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
       padding-top: 0.75rem;
       border-top: 1px solid var(--df-border-subtle);
     }
@@ -586,11 +631,17 @@ import { Project, ProjectCategory, ProjectPriority, ProjectStatus } from '../../
 
     .modal-stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
       background-color: var(--df-surface-container-low);
       padding: 1rem;
       border-radius: var(--df-radius-lg);
+    }
+
+    @media (min-width: 640px) {
+      .modal-stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
 
     .stat-cell {

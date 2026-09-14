@@ -5,6 +5,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProjectService } from '../../core/services/project.service';
 import { ClientService } from '../../core/services/client.service';
+import { LayoutService } from '../../core/services/layout.service';
 
 @Component({
   selector: 'app-header',
@@ -13,45 +14,57 @@ import { ClientService } from '../../core/services/client.service';
   template: `
     <header class="df-header">
       <div class="header-left">
+        <!-- Mobile Drawer Toggle -->
+        <button 
+          type="button" 
+          class="df-btn-icon df-btn-ghost mobile-menu-toggle" 
+          (click)="layoutService.toggleMobileSidebar()"
+          title="Abrir Menú"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
         <div class="breadcrumb-container">
-          <span class="caption breadcrumb-root">DASFUSION CORE</span>
+          <span class="caption breadcrumb-root">DASFUSION</span>
           <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-current">ADMIN CRM & PIPELINE</span>
+          <span class="breadcrumb-current">ADMIN CRM</span>
         </div>
       </div>
 
       <div class="header-right">
-        <!-- Global Search -->
-        <div class="header-search">
+        <!-- Global Search (Responsive) -->
+        <div class="header-search" [class.mobile-search-active]="layoutService.isMobileSearchOpen()">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
           <input 
             type="text" 
-            placeholder="Buscar proyectos, clientes, requerimientos..." 
+            placeholder="Buscar proyectos, clientes..." 
             class="header-search-input"
             [value]="projectService.searchQuery()"
             (input)="onSearchChange($event)"
           />
+          @if (layoutService.isMobileSearchOpen()) {
+            <button type="button" class="close-search-btn" (click)="layoutService.isMobileSearchOpen.set(false)">✕</button>
+          }
         </div>
 
-        <!-- Sync Button -->
+        <!-- Mobile Search Toggle Button -->
         <button 
           type="button" 
-          class="df-btn df-btn-secondary btn-sync" 
-          [disabled]="supabaseService.isSyncing()"
-          (click)="handleSync()"
-          title="Sincronizar propuestas en vivo con DASFusion-hub (Supabase)"
+          class="df-btn-icon df-btn-ghost mobile-search-trigger"
+          (click)="layoutService.toggleMobileSearch()"
+          title="Buscar"
         >
-          <svg 
-            class="sync-icon" 
-            [class.spin]="supabaseService.isSyncing()"
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          >
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span>{{ supabaseService.isSyncing() ? 'Sincronizando...' : 'Sincronizar Hub' }}</span>
         </button>
 
         <!-- Notifications Bell -->
@@ -98,23 +111,36 @@ import { ClientService } from '../../core/services/client.service';
   `,
   styles: [`
     .df-header {
-      height: 70px;
-      background-color: var(--df-surface-container-lowest);
+      height: 64px;
+      background-color: rgba(13, 14, 17, 0.95);
       border-bottom: 1px solid var(--df-border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 2rem;
+      padding: 0 1.5rem;
       position: sticky;
       top: 0;
       z-index: 90;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .mobile-menu-toggle {
+      display: none;
+      color: var(--df-text-primary);
+      padding: 0.35rem;
+      cursor: pointer;
     }
 
     .breadcrumb-container {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
       font-size: 0.8rem;
     }
 
@@ -136,14 +162,14 @@ import { ClientService } from '../../core/services/client.service';
     .header-right {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .header-search {
       position: relative;
       display: flex;
       align-items: center;
-      width: 320px;
+      width: 280px;
     }
 
     .search-icon {
@@ -158,7 +184,7 @@ import { ClientService } from '../../core/services/client.service';
       background-color: var(--df-surface-container);
       border: 1px solid var(--df-border-subtle);
       border-radius: var(--df-radius-default);
-      padding: 0.55rem 0.85rem 0.55rem 2.25rem;
+      padding: 0.5rem 0.85rem 0.5rem 2.25rem;
       color: var(--df-on-surface);
       font-size: 0.825rem;
       font-family: inherit;
@@ -170,19 +196,73 @@ import { ClientService } from '../../core/services/client.service';
       border-color: var(--df-primary);
       box-shadow: 0 0 0 2px rgba(174, 199, 247, 0.2);
       background-color: var(--df-surface-container-high);
-      width: 360px;
+      width: 320px;
     }
 
-    .btn-sync {
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
-      gap: 0.45rem;
+    .mobile-search-trigger {
+      display: none;
     }
 
-    .sync-icon.spin {
-      animation: spin 1s infinite linear;
+    .close-search-btn {
+      display: none;
     }
 
+    /* Mobile Responsive Breakpoints */
+    @media (max-width: 1023px) {
+      .df-header {
+        padding: 0 1rem;
+        height: 58px;
+      }
+
+      .mobile-menu-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mobile-search-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .header-search {
+        display: none;
+      }
+
+      .header-search.mobile-search-active {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 58px;
+        width: 100vw;
+        background-color: var(--df-surface-container-lowest);
+        z-index: 100;
+        padding: 0 1rem;
+        box-shadow: var(--df-shadow-md);
+      }
+
+      .header-search.mobile-search-active .header-search-input {
+        width: 100% !important;
+        font-size: 0.9rem;
+      }
+
+      .close-search-btn {
+        display: block;
+        position: absolute;
+        right: 1.5rem;
+        background: none;
+        border: none;
+        color: var(--df-text-muted);
+        font-size: 1rem;
+        padding: 0.5rem;
+        cursor: pointer;
+      }
+    }
+
+    /* Notifications Dropdown */
     .notifications-wrapper {
       position: relative;
     }
@@ -215,12 +295,22 @@ import { ClientService } from '../../core/services/client.service';
       position: absolute;
       right: 0;
       top: calc(100% + 8px);
-      width: 320px;
+      width: 300px;
       padding: 1rem;
       background-color: var(--df-surface-container-high);
       box-shadow: var(--df-shadow-lg);
       border-radius: var(--df-radius-lg);
       z-index: 1000;
+    }
+
+    @media (max-width: 480px) {
+      .notif-dropdown {
+        position: fixed;
+        left: 1rem;
+        right: 1rem;
+        width: auto;
+        top: 66px;
+      }
     }
 
     .notif-dropdown-header {
@@ -279,11 +369,6 @@ import { ClientService } from '../../core/services/client.service';
       color: var(--df-on-surface-variant);
       line-height: 1.3;
     }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
   `]
 })
 export class HeaderComponent {
@@ -291,6 +376,7 @@ export class HeaderComponent {
   readonly notificationService = inject(NotificationService);
   readonly projectService = inject(ProjectService);
   readonly clientService = inject(ClientService);
+  readonly layoutService = inject(LayoutService);
 
   readonly isNotifOpen = signal<boolean>(false);
 
@@ -302,14 +388,5 @@ export class HeaderComponent {
     const val = (event.target as HTMLInputElement).value;
     this.projectService.searchQuery.set(val);
     this.clientService.searchQuery.set(val);
-  }
-
-  async handleSync() {
-    const res = await this.supabaseService.triggerManualSync();
-    if (res.success) {
-      this.notificationService.success('Sincronización Exitosa', res.message);
-    } else {
-      this.notificationService.error('Error de Sincronización', res.message);
-    }
   }
 }

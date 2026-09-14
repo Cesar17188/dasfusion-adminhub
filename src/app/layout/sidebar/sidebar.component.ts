@@ -5,6 +5,8 @@ import { SupabaseService } from '../../core/services/supabase.service';
 import { ProjectService } from '../../core/services/project.service';
 import { ClientService } from '../../core/services/client.service';
 import { QaService } from '../../core/services/qa.service';
+import { AuthService } from '../../core/services/auth.service';
+import { LayoutService } from '../../core/services/layout.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -12,27 +14,36 @@ import { QaService } from '../../core/services/qa.service';
   imports: [CommonModule, RouterModule],
   template: `
     <aside class="df-sidebar">
-      <!-- Brand Logo Header -->
+      <!-- Brand Logo Header with Mobile Close -->
       <div class="sidebar-brand">
-        <div class="brand-logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#aec7f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="#aec7f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="#aec7f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div class="brand-left">
+          <img 
+            src="https://whlxncobakktxghxdyfw.supabase.co/storage/v1/object/public/general/logoDasfusionDegradado.webp" 
+            alt="DASFusion Logo" 
+            class="brand-logo-img" 
+          />
+          <div class="brand-text">
+            <span class="brand-name">DAS<span class="brand-highlight">FUSION</span></span>
+            <span class="brand-tag caption">CORE ADMIN</span>
+          </div>
         </div>
-        <div class="brand-text">
-          <span class="brand-name">DAS<span class="brand-highlight">FUSION</span></span>
-          <span class="brand-tag caption">CORE ADMIN</span>
-        </div>
+
+        <button 
+          type="button" 
+          class="df-btn-icon df-btn-ghost mobile-close-drawer-btn" 
+          (click)="layoutService.closeMobileSidebar()"
+          title="Cerrar Menú"
+        >
+          ✕
+        </button>
       </div>
 
       <!-- Live Supabase Status Badge -->
-      <div class="supabase-status-widget" [routerLink]="['/settings']">
+      <div class="supabase-status-widget">
         <div class="status-indicator">
           <span class="pulse-dot" [ngClass]="supabaseService.isConnected() ? 'connected' : 'disconnected'"></span>
           <span class="caption status-text">
-            {{ supabaseService.isConnected() ? 'Supabase Conectado' : 'Supabase Offline' }}
+            {{ supabaseService.isConnected() ? 'Supabase Online' : 'Supabase Offline' }}
           </span>
         </div>
         <span class="caption hub-label">DASFusion-hub</span>
@@ -42,7 +53,7 @@ import { QaService } from '../../core/services/qa.service';
       <nav class="sidebar-nav">
         <div class="nav-section-title caption">GESTIÓN PRINCIPAL</div>
 
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"></rect>
             <rect x="14" y="3" width="7" height="7"></rect>
@@ -52,7 +63,7 @@ import { QaService } from '../../core/services/qa.service';
           <span class="nav-text">Dashboard</span>
         </a>
 
-        <a routerLink="/kanban" routerLinkActive="active" class="nav-link">
+        <a routerLink="/kanban" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="3" x2="18" y2="21"></line>
             <line x1="6" y1="3" x2="6" y2="21"></line>
@@ -62,7 +73,7 @@ import { QaService } from '../../core/services/qa.service';
           <span class="nav-badge">{{ projectService.totalProjects() }}</span>
         </a>
 
-        <a routerLink="/projects" routerLinkActive="active" class="nav-link">
+        <a routerLink="/projects" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
             <polyline points="2 17 12 22 22 17"></polyline>
@@ -71,7 +82,7 @@ import { QaService } from '../../core/services/qa.service';
           <span class="nav-text">Proyectos & Hub</span>
         </a>
 
-        <a routerLink="/clients" routerLinkActive="active" class="nav-link">
+        <a routerLink="/clients" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -84,7 +95,7 @@ import { QaService } from '../../core/services/qa.service';
 
         <div class="nav-section-title caption" style="margin-top: 1rem;">CICLO DE SOFTWARE</div>
 
-        <a routerLink="/development" routerLinkActive="active" class="nav-link">
+        <a routerLink="/development" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
@@ -92,7 +103,7 @@ import { QaService } from '../../core/services/qa.service';
           <span class="nav-text">Tiempos Desarrollo</span>
         </a>
 
-        <a routerLink="/qa-testing" routerLinkActive="active" class="nav-link">
+        <a routerLink="/qa-testing" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
@@ -102,7 +113,7 @@ import { QaService } from '../../core/services/qa.service';
           }
         </a>
 
-        <a routerLink="/deliveries" routerLinkActive="active" class="nav-link">
+        <a routerLink="/deliveries" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 14 14"></polyline>
@@ -110,24 +121,44 @@ import { QaService } from '../../core/services/qa.service';
           <span class="nav-text">Tiempos de Entrega</span>
         </a>
 
-        <div class="nav-section-title caption" style="margin-top: 1rem;">INTEGRACIONES</div>
+        <div class="nav-section-title caption" style="margin-top: 1rem;">EQUIPO & ACCESOS</div>
 
-        <a routerLink="/settings" routerLinkActive="active" class="nav-link">
+        <a routerLink="/users" routerLinkActive="active" class="nav-link" (click)="layoutService.closeMobileSidebar()">
           <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          <span class="nav-text">Supabase & Sync</span>
+          <span class="nav-text">Administradores</span>
         </a>
       </nav>
 
-      <!-- Admin User Footer Info -->
+      <!-- User Profile & Logout Footer -->
       <div class="sidebar-user-footer">
-        <div class="user-avatar">CA</div>
-        <div class="user-details">
-          <span class="user-name">César Admin</span>
-          <span class="caption user-role">Principal Tech Lead</span>
+        <div class="user-avatar">
+          {{ (authService.currentProfile()?.fullName || 'Admin').charAt(0) }}
         </div>
+        <div class="user-details">
+          <span class="user-name">{{ authService.currentProfile()?.fullName || 'César Morales' }}</span>
+          <div class="role-badge-row">
+            <span class="df-pill" [class.df-pill-primary]="authService.isAdmin()" [class.df-pill-success]="authService.isClient()">
+              {{ (authService.currentProfile()?.role || 'admin').toUpperCase() }}
+            </span>
+          </div>
+        </div>
+        <button 
+          type="button" 
+          class="df-btn-icon df-btn-ghost logout-btn" 
+          (click)="authService.logout()"
+          title="Cerrar sesión"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
       </div>
     </aside>
   `,
@@ -147,21 +178,23 @@ import { QaService } from '../../core/services/qa.service';
     }
 
     .sidebar-brand {
-      padding: 1.5rem 1.25rem 1rem;
+      padding: 1.25rem 1.25rem 1rem;
       display: flex;
       align-items: center;
-      gap: 0.85rem;
+      justify-content: space-between;
     }
 
-    .brand-logo-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--df-radius-default);
-      background: linear-gradient(135deg, #1b365d 0%, #121316 100%);
-      border: 1px solid rgba(174, 199, 247, 0.3);
+    .brand-left {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
     }
 
     .brand-text {
@@ -170,7 +203,7 @@ import { QaService } from '../../core/services/qa.service';
     }
 
     .brand-name {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 800;
       letter-spacing: 0.04em;
       color: var(--df-text-primary);
@@ -186,22 +219,22 @@ import { QaService } from '../../core/services/qa.service';
       color: var(--df-text-muted);
     }
 
+    .mobile-close-drawer-btn {
+      display: none;
+      color: var(--df-text-muted);
+      font-size: 1.1rem;
+    }
+
     .supabase-status-widget {
-      margin: 0.5rem 1.25rem 1rem;
-      padding: 0.6rem 0.85rem;
+      margin: 0.5rem 1.25rem 0.85rem;
+      padding: 0.55rem 0.85rem;
       background-color: var(--df-surface-container-lowest);
       border: 1px solid var(--df-border-subtle);
       border-radius: var(--df-radius-default);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      cursor: pointer;
       transition: all var(--df-transition-fast);
-    }
-
-    .supabase-status-widget:hover {
-      border-color: rgba(174, 199, 247, 0.4);
-      background-color: var(--df-surface-container-low);
     }
 
     .status-indicator {
@@ -246,6 +279,7 @@ import { QaService } from '../../core/services/qa.service';
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-section-title {
@@ -321,41 +355,87 @@ import { QaService } from '../../core/services/qa.service';
     }
 
     .sidebar-user-footer {
-      padding: 1rem 1.25rem;
+      padding: 0.85rem 1rem;
       border-top: 1px solid var(--df-border-subtle);
       background-color: var(--df-surface-container-lowest);
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.65rem;
     }
 
     .user-avatar {
-      width: 36px;
-      height: 36px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--df-tertiary) 0%, var(--df-tertiary-container) 100%);
-      color: var(--df-on-tertiary);
+      background: linear-gradient(135deg, var(--df-primary) 0%, var(--df-primary-container) 100%);
+      color: var(--df-on-primary);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
       font-size: 0.85rem;
+      flex-shrink: 0;
     }
 
     .user-details {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      overflow: hidden;
     }
 
     .user-name {
-      font-size: 0.825rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--df-text-primary);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
-    .user-role {
-      font-size: 0.7rem;
+    .role-badge-row {
+      margin-top: 0.15rem;
+    }
+
+    .role-badge-row .df-pill {
+      font-size: 0.6rem;
+      padding: 0.05rem 0.35rem;
+    }
+
+    .logout-btn {
       color: var(--df-text-muted);
+      padding: 0.35rem;
+      border-radius: var(--df-radius-sm);
+    }
+
+    .logout-btn:hover {
+      color: var(--df-error);
+      background-color: var(--df-error-container);
+    }
+
+    /* Mobile Off-Canvas Drawer Behavior */
+    @media (max-width: 1023px) {
+      .df-sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 280px;
+        transform: translateX(-100%);
+        transition: transform var(--df-transition-smooth);
+        z-index: 1000;
+        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.7);
+      }
+
+      .df-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .mobile-close-drawer-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   `]
 })
@@ -364,4 +444,6 @@ export class SidebarComponent {
   readonly projectService = inject(ProjectService);
   readonly clientService = inject(ClientService);
   readonly qaService = inject(QaService);
+  readonly authService = inject(AuthService);
+  readonly layoutService = inject(LayoutService);
 }

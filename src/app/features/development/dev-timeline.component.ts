@@ -298,10 +298,44 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
       margin-bottom: 0.35rem;
     }
 
+    .dev-page {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+
+    .page-tag {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+      flex-wrap: wrap;
+    }
+
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
@@ -314,6 +348,13 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .header-actions {
+        width: auto;
+      }
     }
 
     .project-selector-wrapper {
@@ -324,28 +365,44 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
       border: 1px solid var(--df-border-subtle);
       border-radius: var(--df-radius-default);
       padding: 0.2rem 0.65rem;
+      width: 100%;
+    }
+
+    @media (min-width: 640px) {
+      .project-selector-wrapper {
+        width: auto;
+      }
     }
 
     .label-select {
       color: var(--df-text-muted);
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .project-dropdown {
       border: none;
       background: transparent;
       padding: 0.4rem 0.5rem;
-      min-width: 200px;
+      width: 100%;
+      min-width: 180px;
     }
 
     .dev-metrics-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .dev-metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+      }
     }
 
     .dev-metric-card {
-      padding: 1.25rem;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
@@ -353,7 +410,7 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
     }
 
     .metric-val {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
     }
@@ -381,8 +438,17 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
 
     .phase-header {
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .phase-header {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
     }
 
     .phase-lead {
@@ -391,7 +457,7 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
     }
 
     .phase-name {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--df-text-primary);
       margin: 0.15rem 0;
@@ -404,7 +470,8 @@ import { DevPhase, PhaseType } from '../../core/models/development.model';
     .phase-status-group {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .hours-badge {

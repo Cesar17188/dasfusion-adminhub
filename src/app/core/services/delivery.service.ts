@@ -39,12 +39,13 @@ export class DeliveryService {
     const saved = localStorage.getItem(STORAGE_KEY_DELIVERIES);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: DeliveryMilestone[] = JSON.parse(saved);
+        return parsed.filter(m => !m.id.startsWith('ms-0'));
       } catch {
         // fallback
       }
     }
-    return INITIAL_DELIVERY_MILESTONES;
+    return [];
   }
 
   private saveMilestones(updated: DeliveryMilestone[]) {

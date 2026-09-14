@@ -15,6 +15,9 @@ export interface Client {
   phone?: string;
   status: ClientStatus;
   totalBudget: number;
+  budgetRange?: string;
+  estimatedTimeline?: string;
+  projectType?: string;
   source: 'DASFusion-hub' | 'Direct' | 'Referral' | 'LinkedIn';
   createdAt: string;
   updatedAt?: string;
@@ -23,4 +26,18 @@ export interface Client {
   tags: string[];
   notes: ClientNote[];
   hubMessage?: string;
+  details?: string;
+}
+
+export interface SupabaseLeadDb {
+  id: string;
+  created_at: string | null;
+  full_name: string;
+  company: string | null;
+  email: string;
+  project_type: string | null;
+  budget_range: string | null;
+  estimated_timeline: string | null;
+  details: string | null;
+  status: string | null;
 }

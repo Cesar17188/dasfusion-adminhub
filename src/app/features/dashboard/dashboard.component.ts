@@ -227,6 +227,12 @@ import { FormsModule } from '@angular/forms';
                       <span class="mono budget-cell">{{ project.budget | currency:project.currency:'symbol':'1.0-0' }}</span>
                     </td>
                   </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="caption" style="text-align: center; padding: 2rem; color: var(--df-text-muted);">
+                      No hay proyectos registrados aún en la base de datos.
+                    </td>
+                  </tr>
                 }
               </tbody>
             </table>
@@ -262,6 +268,10 @@ import { FormsModule } from '@angular/forms';
                   </div>
                 </div>
               </div>
+            } @empty {
+              <p class="caption empty-msg" style="padding: 1.5rem; text-align: center; color: var(--df-text-muted);">
+                Sin leads recientes en la base de datos Supabase.
+              </p>
             }
           </div>
         </div>
@@ -409,13 +419,23 @@ import { FormsModule } from '@angular/forms';
 
     .hero-banner {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 2rem 2.5rem;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 1.25rem;
       background: radial-gradient(circle at 80% 20%, rgba(174, 199, 247, 0.15) 0%, transparent 60%),
                   linear-gradient(135deg, var(--df-primary-container) 0%, var(--df-surface-container) 100%);
       border-radius: var(--df-radius-xl);
       border: 1px solid rgba(174, 199, 247, 0.2);
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 768px) {
+      .hero-banner {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2rem 2.5rem;
+      }
     }
 
     .hero-tag {
@@ -423,6 +443,7 @@ import { FormsModule } from '@angular/forms';
       align-items: center;
       gap: 0.75rem;
       margin-bottom: 0.6rem;
+      flex-wrap: wrap;
     }
 
     .date-chip {
@@ -431,45 +452,66 @@ import { FormsModule } from '@angular/forms';
     }
 
     .hero-title {
-      font-size: 2rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
       margin-bottom: 0.5rem;
     }
 
+    @media (min-width: 768px) {
+      .hero-title {
+        font-size: 2rem;
+      }
+    }
+
     .hero-subtitle {
       color: var(--df-on-surface-variant);
       max-width: 650px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
 
     .hero-actions {
       display: flex;
-      align-items: center;
-      gap: 1rem;
+      flex-direction: column;
+      width: 100%;
+      gap: 0.75rem;
       flex-shrink: 0;
+    }
+
+    @media (min-width: 640px) {
+      .hero-actions {
+        flex-direction: row;
+        width: auto;
+      }
     }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1100px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
 
     .dashboard-two-col {
       display: grid;
-      grid-template-columns: 1.4fr 1fr;
+      grid-template-columns: 1fr;
       gap: 1.25rem;
     }
 
-    @media (max-width: 1024px) {
+    @media (min-width: 1024px) {
       .dashboard-two-col {
-        grid-template-columns: 1fr;
-      }
-      .hero-banner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
+        grid-template-columns: 1.4fr 1fr;
       }
     }
 
@@ -477,6 +519,7 @@ import { FormsModule } from '@angular/forms';
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
+      gap: 0.5rem;
       margin-bottom: 1.25rem;
     }
 
@@ -495,6 +538,7 @@ import { FormsModule } from '@angular/forms';
       color: var(--df-primary);
       text-decoration: none;
       font-weight: 600;
+      white-space: nowrap;
     }
     .view-all-link:hover {
       text-decoration: underline;
@@ -503,9 +547,21 @@ import { FormsModule } from '@angular/forms';
     /* Pipeline stage boxes */
     .pipeline-stages-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
       margin-bottom: 1.5rem;
+    }
+
+    @media (min-width: 640px) {
+      .pipeline-stages-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .pipeline-stages-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
     }
 
     .stage-box {

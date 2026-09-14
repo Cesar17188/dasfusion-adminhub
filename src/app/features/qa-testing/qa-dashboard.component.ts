@@ -331,15 +331,21 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
     .qa-page {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .page-header {
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
       gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
     }
 
     .page-tag {
@@ -347,12 +353,19 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
@@ -364,23 +377,47 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .header-actions {
+        width: auto;
+      }
+    }
+
+    .header-actions .df-btn {
+      flex: 1;
+    }
+
+    @media (min-width: 768px) {
+      .header-actions .df-btn {
+        flex: initial;
+      }
     }
 
     .qa-stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .qa-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+      }
     }
 
     .qa-stat-card {
-      padding: 1.25rem;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
     }
 
     .stat-big-val {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
     }
 
@@ -393,18 +430,21 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
       gap: 0.5rem;
       border-bottom: 1px solid var(--df-border-subtle);
       padding-bottom: 0.25rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .tab-btn {
-      padding: 0.65rem 1.25rem;
+      padding: 0.65rem 1rem;
       background: transparent;
       border: none;
       color: var(--df-on-surface-variant);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: all var(--df-transition-fast);
+      white-space: nowrap;
     }
 
     .tab-btn.active {
@@ -413,19 +453,35 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
     }
 
     .table-card {
-      padding: 1.25rem;
+      padding: 1rem;
     }
 
     .table-filters-row {
       display: flex;
-      align-items: center;
-      gap: 1rem;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
       margin-bottom: 1.25rem;
     }
 
+    @media (min-width: 640px) {
+      .table-filters-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+      }
+    }
+
     .filter-select {
-      width: auto;
-      min-width: 220px;
+      width: 100%;
+      min-width: 180px;
+    }
+
+    @media (min-width: 640px) {
+      .filter-select {
+        width: auto;
+        min-width: 220px;
+      }
     }
 
     .tc-title-cell {
@@ -466,8 +522,15 @@ import { BugSeverity, BugStatus, TestCase, TestType } from '../../core/models/qa
     /* Bugs grid */
     .bugs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+      .bugs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.25rem;
+      }
     }
 
     .bug-item {

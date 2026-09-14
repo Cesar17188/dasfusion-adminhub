@@ -2,9 +2,10 @@ export interface SupabaseConfig {
   url: string;
   anonKey: string;
   serviceRoleKey?: string;
-  tableNameClients: string;
-  tableNameSubmissions: string;
+  tableNameLeads: string;
+  tableNameProposals: string;
   tableNameProjects: string;
+  tableNameProfiles: string;
   autoSyncIntervalMinutes: number;
   enableLiveSubscription: boolean;
   isConnected: boolean;

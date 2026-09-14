@@ -1,10 +1,16 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login.component').then(m => m.LoginComponent)
+  },
+  {
     path: '',
     component: MainLayoutComponent,
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -40,8 +46,8 @@ export const routes: Routes = [
         loadComponent: () => import('./features/deliveries/delivery-schedule.component').then(m => m.DeliveryScheduleComponent)
       },
       {
-        path: 'settings',
-        loadComponent: () => import('./features/settings-supabase/supabase-settings.component').then(m => m.SupabaseSettingsComponent)
+        path: 'users',
+        loadComponent: () => import('./features/users/admin-users.component').then(m => m.AdminUsersComponent)
       }
     ]
   },

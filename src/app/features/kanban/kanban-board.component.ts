@@ -193,15 +193,23 @@ interface KanbanColumn {
     .kanban-page {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      height: calc(100vh - 120px);
+      gap: 1.25rem;
+      min-height: calc(100vh - 120px);
     }
 
     .page-header {
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
+      gap: 1rem;
       flex-shrink: 0;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
     }
 
     .page-tag {
@@ -209,24 +217,39 @@ interface KanbanColumn {
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
       color: var(--df-text-secondary);
       max-width: 650px;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
     }
 
     .header-stats {
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .header-stats {
+        width: auto;
+      }
     }
 
     .stat-pill {
@@ -238,19 +261,31 @@ interface KanbanColumn {
       align-items: center;
       gap: 0.45rem;
       font-size: 0.85rem;
+      flex: 1;
+      justify-content: center;
+    }
+
+    @media (min-width: 768px) {
+      .stat-pill {
+        flex: initial;
+      }
     }
 
     .kanban-columns-container {
       display: flex;
-      gap: 1.25rem;
+      gap: 1rem;
       flex: 1;
       overflow-x: auto;
       padding-bottom: 1rem;
       align-items: stretch;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
     }
 
     .kanban-column {
-      flex: 0 0 320px;
+      flex: 0 0 85vw;
+      max-width: 320px;
+      scroll-snap-align: start;
       background-color: var(--df-surface-container-low);
       border: 1px solid var(--df-border-subtle);
       border-radius: var(--df-radius-xl);
@@ -260,13 +295,20 @@ interface KanbanColumn {
       max-height: 100%;
     }
 
+    @media (min-width: 768px) {
+      .kanban-column {
+        flex: 0 0 310px;
+        max-width: 310px;
+      }
+    }
+
     .kanban-column.col-active {
       border-color: rgba(174, 199, 247, 0.35);
       background-color: rgba(26, 27, 30, 0.85);
     }
 
     .column-header {
-      padding: 1.15rem 1.25rem 0.85rem;
+      padding: 1rem 1.15rem 0.75rem;
       border-bottom: 1px solid var(--df-border-subtle);
       background-color: var(--df-surface-container);
     }
@@ -299,16 +341,16 @@ interface KanbanColumn {
     }
 
     .cards-list {
-      padding: 1rem;
+      padding: 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.85rem;
       flex: 1;
       overflow-y: auto;
     }
 
     .kanban-card {
-      padding: 1.15rem;
+      padding: 1rem;
       background-color: var(--df-surface-container);
       cursor: pointer;
       border-radius: var(--df-radius-lg);
@@ -329,11 +371,15 @@ interface KanbanColumn {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 0.5rem;
     }
 
     .client-badge {
       color: var(--df-primary);
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .card-project-title {
@@ -388,9 +434,9 @@ interface KanbanColumn {
     }
 
     .move-btn {
-      width: 28px;
-      height: 28px;
-      font-size: 0.85rem;
+      width: 32px;
+      height: 32px;
+      font-size: 0.95rem;
     }
 
     .empty-column-state {
@@ -410,8 +456,14 @@ interface KanbanColumn {
 
     .detail-hero-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.85rem;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 600px) {
+      .detail-hero-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .detail-box {

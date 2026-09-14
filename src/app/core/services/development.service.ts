@@ -39,12 +39,13 @@ export class DevelopmentService {
     const saved = localStorage.getItem(STORAGE_KEY_DEV_PHASES);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: DevPhase[] = JSON.parse(saved);
+        return parsed.filter(p => !p.id.startsWith('ph-0'));
       } catch {
         // fallback
       }
     }
-    return INITIAL_DEV_PHASES;
+    return [];
   }
 
   private savePhases(updated: DevPhase[]) {
@@ -56,12 +57,13 @@ export class DevelopmentService {
     const saved = localStorage.getItem(STORAGE_KEY_TIME_LOGS);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: TimeLogEntry[] = JSON.parse(saved);
+        return parsed.filter(tl => !tl.id.startsWith('tl-0'));
       } catch {
         // fallback
       }
     }
-    return INITIAL_TIME_LOGS;
+    return [];
   }
 
   private saveTimeLogs(updated: TimeLogEntry[]) {

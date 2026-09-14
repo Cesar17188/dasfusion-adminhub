@@ -269,17 +269,44 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
       gap: 1rem;
     }
 
+    .deliveries-page {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+    }
+
     .page-tag {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
@@ -289,19 +316,26 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
 
     .delivery-metrics-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.25rem;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .delivery-metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+      }
     }
 
     .metric-box {
-      padding: 1.25rem;
+      padding: 1.15rem;
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
     }
 
     .stat-num {
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
     }
 
@@ -328,8 +362,17 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
 
     .m-header {
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .m-header {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+      }
     }
 
     .m-version-row {
@@ -337,6 +380,7 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.25rem;
+      flex-wrap: wrap;
     }
 
     .version-chip {
@@ -353,7 +397,7 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
     }
 
     .m-title {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--df-text-primary);
     }
@@ -361,13 +405,29 @@ import { DeliveryMilestone, DeliveryStatus } from '../../core/models/delivery.mo
     .m-status-block {
       display: flex;
       align-items: center;
-      gap: 1.25rem;
+      justify-content: space-between;
+      width: 100%;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .m-status-block {
+        width: auto;
+        justify-content: flex-end;
+        gap: 1.25rem;
+      }
     }
 
     .due-box {
       display: flex;
       flex-direction: column;
-      text-align: right;
+      text-align: left;
+    }
+
+    @media (min-width: 640px) {
+      .due-box {
+        text-align: right;
+      }
     }
 
     .due-date {

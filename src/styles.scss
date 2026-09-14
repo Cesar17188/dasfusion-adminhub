@@ -486,3 +486,47 @@ html, body {
 .animate-pulse-subtle {
   animation: pulse-subtle 2.5s infinite ease-in-out;
 }
+
+/* ==========================================================================
+   Mobile-First Global Responsive Adaptations
+   ========================================================================== */
+
+/* Universal Form Row - Mobile First (1 column on mobile, 2 columns on tablet/desktop) */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Responsive Cards */
+@media (max-width: 640px) {
+  .df-card {
+    padding: 1rem;
+    border-radius: var(--df-radius-lg);
+  }
+
+  .headline-md {
+    font-size: 1.45rem;
+    line-height: 1.25;
+  }
+
+  .headline-sm {
+    font-size: 1.15rem;
+  }
+
+  .display-lg {
+    font-size: 2rem;
+  }
+}
+
+/* Safe-area insets helper */
+.safe-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+

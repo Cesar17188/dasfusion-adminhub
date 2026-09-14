@@ -9,6 +9,9 @@ import { CommonModule } from '@angular/common';
     @if (isOpen()) {
       <div class="modal-backdrop" (click)="onBackdropClick($event)">
         <div class="modal-dialog df-card df-card-glass" [style.max-width]="maxWidth() || '680px'" (click)="$event.stopPropagation()">
+          <!-- Mobile Pull Indicator Bar -->
+          <div class="mobile-sheet-handle"></div>
+
           <div class="modal-header">
             <div class="modal-title-group">
               <h3 class="headline-sm modal-title">{{ title() }}</h3>
@@ -44,7 +47,7 @@ import { CommonModule } from '@angular/common';
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(13, 14, 17, 0.75);
+      background: rgba(13, 14, 17, 0.8);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 999;
@@ -53,6 +56,10 @@ import { CommonModule } from '@angular/common';
       justify-content: center;
       padding: 1.5rem;
       animation: fadeIn 0.2s ease-out;
+    }
+
+    .mobile-sheet-handle {
+      display: none;
     }
 
     .modal-dialog {
@@ -100,6 +107,7 @@ import { CommonModule } from '@angular/common';
       padding: 1.5rem;
       overflow-y: auto;
       flex: 1;
+      -webkit-overflow-scrolling: touch;
     }
 
     .modal-footer {
@@ -112,6 +120,47 @@ import { CommonModule } from '@angular/common';
       background-color: var(--df-surface-container-low);
     }
 
+    /* Mobile Bottom Sheet Transformation */
+    @media (max-width: 640px) {
+      .modal-backdrop {
+        padding: 0;
+        align-items: flex-end;
+      }
+
+      .modal-dialog {
+        border-radius: 20px 20px 0 0;
+        max-height: 92vh;
+        max-width: 100vw !important;
+        animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .mobile-sheet-handle {
+        display: block;
+        width: 36px;
+        height: 4px;
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.2);
+        margin: 8px auto 0;
+      }
+
+      .modal-header {
+        padding: 1rem 1.25rem;
+      }
+
+      .modal-content {
+        padding: 1.25rem;
+      }
+
+      .modal-footer {
+        padding: 0.85rem 1.25rem;
+        flex-wrap: wrap;
+      }
+
+      .modal-footer > * {
+        flex: 1;
+      }
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -120,6 +169,11 @@ import { CommonModule } from '@angular/common';
     @keyframes scaleUp {
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideUpSheet {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
     }
   `]
 })

@@ -323,13 +323,21 @@ import { Client, ClientStatus } from '../../core/models/client.model';
     .clients-page {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .page-header {
       display: flex;
+      flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .page-header {
+        flex-direction: row;
+        justify-content: space-between;
+      }
     }
 
     .page-tag {
@@ -337,12 +345,19 @@ import { Client, ClientStatus } from '../../core/models/client.model';
       align-items: center;
       gap: 0.5rem;
       margin-bottom: 0.35rem;
+      flex-wrap: wrap;
     }
 
     .page-title {
-      font-size: 1.85rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--df-text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .page-title {
+        font-size: 1.85rem;
+      }
     }
 
     .page-subtitle {
@@ -352,10 +367,19 @@ import { Client, ClientStatus } from '../../core/models/client.model';
 
     .controls-bar {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.25rem;
-      gap: 1rem;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 1rem;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .controls-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+      }
     }
 
     .search-box {
@@ -375,7 +399,18 @@ import { Client, ClientStatus } from '../../core/models/client.model';
       padding-left: 2.25rem;
     }
 
+    .filters-group {
+      width: 100%;
+    }
+
+    @media (min-width: 640px) {
+      .filters-group {
+        width: auto;
+      }
+    }
+
     .filter-select {
+      width: 100%;
       min-width: 180px;
     }
 
@@ -440,11 +475,17 @@ import { Client, ClientStatus } from '../../core/models/client.model';
 
     .overview-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 0.75rem;
       background-color: var(--df-surface-container-low);
       padding: 1rem;
       border-radius: var(--df-radius-lg);
+    }
+
+    @media (min-width: 600px) {
+      .overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     .overview-cell {

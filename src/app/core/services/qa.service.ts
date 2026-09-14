@@ -52,12 +52,13 @@ export class QaService {
     const saved = localStorage.getItem(STORAGE_KEY_TEST_CASES);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: TestCase[] = JSON.parse(saved);
+        return parsed.filter(t => !t.id.startsWith('tc-0'));
       } catch {
         // fallback
       }
     }
-    return INITIAL_TEST_CASES;
+    return [];
   }
 
   private saveTestCases(updated: TestCase[]) {
@@ -69,12 +70,13 @@ export class QaService {
     const saved = localStorage.getItem(STORAGE_KEY_BUGS);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: BugReport[] = JSON.parse(saved);
+        return parsed.filter(b => !b.id.startsWith('bug-0'));
       } catch {
         // fallback
       }
     }
-    return INITIAL_BUG_REPORTS;
+    return [];
   }
 
   private saveBugReports(updated: BugReport[]) {
