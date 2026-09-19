@@ -318,4 +318,87 @@ export class AuthService {
     }
     this.router.navigate(['/login']);
   }
+
+  async sendPasswordResetEmail(email: string): Promise<{ success: boolean; message: string }> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    const client = this.supabaseService.getClient();
+
+    if (client && this.supabaseService.isConnected()) {
+      try {
+        const redirectTo = `${window.location.origin}/reset-password`;
+        const { data, error } = await client.auth.resetPasswordForEmail(email, {
+          redirectTo
+        });
+
+        if (error) {
+          this.isLoading.set(false);
+          const errorMsg = error.message || 'No fue posible enviar el correo de recuperación.';
+          this.errorMessage.set(errorMsg);
+          this.notificationService.error('Error de Recuperación', errorMsg);
+          return { success: false, message: errorMsg };
+        }
+
+        this.isLoading.set(false);
+        const successMsg = `Se ha enviado un enlace de recuperación al correo ${email}. Revisa tu bandeja de entrada o spam.`;
+        this.notificationService.success('Enlace Enviado', successMsg);
+        return { success: true, message: successMsg };
+      } catch (err: any) {
+        this.isLoading.set(false);
+        const errorMsg = err?.message || 'Error de conexión al procesar la solicitud.';
+        this.errorMessage.set(errorMsg);
+        this.notificationService.error('Error de Conexión', errorMsg);
+        return { success: false, message: errorMsg };
+      }
+    }
+
+    // Demo mode simulation
+    await new Promise(resolve => setTimeout(resolve, 800));
+    this.isLoading.set(false);
+    const demoMsg = `(Modo Seguro/Demo) Enlace simulado enviado a ${email}. En producción se envía a través de Supabase Auth.`;
+    this.notificationService.success('Solicitud Procesada', demoMsg);
+    return { success: true, message: demoMsg };
+  }
+
+  async updateUserPassword(newPassword: string): Promise<{ success: boolean; message: string }> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    const client = this.supabaseService.getClient();
+
+    if (client && this.supabaseService.isConnected()) {
+      try {
+        const { data, error } = await client.auth.updateUser({
+          password: newPassword
+        });
+
+        if (error) {
+          this.isLoading.set(false);
+          const errorMsg = error.message || 'No se pudo actualizar la contraseña.';
+          this.errorMessage.set(errorMsg);
+          this.notificationService.error('Error al Cambiar Contraseña', errorMsg);
+          return { success: false, message: errorMsg };
+        }
+
+        this.isLoading.set(false);
+        const successMsg = 'Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión con tus nuevas credenciales.';
+        this.notificationService.success('Contraseña Actualizada', successMsg);
+        return { success: true, message: successMsg };
+      } catch (err: any) {
+        this.isLoading.set(false);
+        const errorMsg = err?.message || 'Error de conexión al actualizar la contraseña.';
+        this.errorMessage.set(errorMsg);
+        this.notificationService.error('Error de Conexión', errorMsg);
+        return { success: false, message: errorMsg };
+      }
+    }
+
+    // Demo mode simulation
+    await new Promise(resolve => setTimeout(resolve, 800));
+    this.isLoading.set(false);
+    const demoMsg = '(Modo Seguro/Demo) Contraseña de administrador actualizada correctamente.';
+    this.notificationService.success('Contraseña Actualizada', demoMsg);
+    return { success: true, message: demoMsg };
+  }
 }

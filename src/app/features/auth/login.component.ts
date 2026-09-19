@@ -83,7 +83,7 @@ import { SupabaseService } from '../../core/services/supabase.service';
           <div class="form-group">
             <div class="label-row">
               <label class="df-label">Contraseña</label>
-              <span class="caption forgot-text">Validación RLS Supabase</span>
+              <a routerLink="/forgot-password" class="forgot-link">¿Olvidaste tu contraseña?</a>
             </div>
             <div class="input-with-icon">
               <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -346,9 +346,18 @@ import { SupabaseService } from '../../core/services/supabase.service';
       align-items: center;
     }
 
-    .forgot-text {
-      font-size: 0.7rem;
-      color: var(--df-text-muted);
+    .forgot-link {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--df-primary);
+      text-decoration: none;
+      transition: all var(--df-transition-fast);
+      cursor: pointer;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+      opacity: 0.85;
     }
 
     .input-with-icon {
