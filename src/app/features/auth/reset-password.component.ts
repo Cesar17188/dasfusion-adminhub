@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, HostListener } from '@angular/core';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
@@ -48,188 +48,156 @@ import { SupabaseService } from '../../core/services/supabase.service';
           </p>
         </div>
 
-        @if (!resetCompleted()) {
-          <!-- Error Alert -->
-          @if (authService.errorMessage() || localError()) {
-            <div class="error-alert animate-fade">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        <!-- Error Alert -->
+        @if (authService.errorMessage() || localError()) {
+          <div class="error-alert animate-fade">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ localError() || authService.errorMessage() }}</span>
+          </div>
+        }
+
+        <!-- Reset Form -->
+        <form (ngSubmit)="handleResetPassword()" class="auth-form">
+          
+          <!-- New Password -->
+          <div class="form-group">
+            <label class="df-label">Nueva Contraseña</label>
+            <div class="input-with-icon">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
-              <span>{{ localError() || authService.errorMessage() }}</span>
+              <input 
+                [type]="showPassword() ? 'text' : 'password'" 
+                class="df-input auth-input" 
+                [(ngModel)]="newPassword" 
+                name="newPassword" 
+                required 
+                autocomplete="new-password"
+                placeholder="Mínimo 8 caracteres"
+                [disabled]="authService.isLoading()"
+              />
+              <button 
+                type="button" 
+                class="eye-btn" 
+                (click)="showPassword.set(!showPassword())"
+                tabindex="-1"
+              >
+                @if (showPassword()) {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                } @else {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Strength bar -->
+          @if (newPassword) {
+            <div class="strength-meter-container animate-fade">
+              <div class="strength-bars">
+                <div class="bar" [class.active]="strengthScore() >= 1" [class.weak]="strengthScore() === 1" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3"></div>
+                <div class="bar" [class.active]="strengthScore() >= 2" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3"></div>
+                <div class="bar" [class.active]="strengthScore() >= 3" [class.strong]="strengthScore() >= 3"></div>
+                <div class="bar" [class.active]="strengthScore() >= 4" [class.strong]="strengthScore() >= 4"></div>
+              </div>
+              <span class="strength-label" [class.weak]="strengthScore() <= 1" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3">
+                {{ strengthLabel() }}
+              </span>
             </div>
           }
 
-          <!-- Reset Form -->
-          <form (ngSubmit)="handleResetPassword()" class="auth-form">
-            
-            <!-- New Password -->
-            <div class="form-group">
-              <label class="df-label">Nueva Contraseña</label>
-              <div class="input-with-icon">
-                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                <input 
-                  [type]="showPassword() ? 'text' : 'password'" 
-                  class="df-input auth-input" 
-                  [(ngModel)]="newPassword" 
-                  name="newPassword" 
-                  required 
-                  autocomplete="new-password"
-                  placeholder="Mínimo 8 caracteres"
-                />
-                <button 
-                  type="button" 
-                  class="eye-btn" 
-                  (click)="showPassword.set(!showPassword())"
-                  tabindex="-1"
-                >
-                  @if (showPassword()) {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  } @else {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  }
-                </button>
-              </div>
-            </div>
-
-            <!-- Strength bar -->
-            @if (newPassword) {
-              <div class="strength-meter-container animate-fade">
-                <div class="strength-bars">
-                  <div class="bar" [class.active]="strengthScore() >= 1" [class.weak]="strengthScore() === 1" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3"></div>
-                  <div class="bar" [class.active]="strengthScore() >= 2" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3"></div>
-                  <div class="bar" [class.active]="strengthScore() >= 3" [class.strong]="strengthScore() >= 3"></div>
-                  <div class="bar" [class.active]="strengthScore() >= 4" [class.strong]="strengthScore() >= 4"></div>
-                </div>
-                <span class="strength-label" [class.weak]="strengthScore() <= 1" [class.medium]="strengthScore() === 2" [class.strong]="strengthScore() >= 3">
-                  {{ strengthLabel() }}
-                </span>
-              </div>
-            }
-
-            <!-- Confirm Password -->
-            <div class="form-group">
-              <label class="df-label">Confirmar Contraseña</label>
-              <div class="input-with-icon">
-                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                <input 
-                  [type]="showConfirmPassword() ? 'text' : 'password'" 
-                  class="df-input auth-input" 
-                  [(ngModel)]="confirmPassword" 
-                  name="confirmPassword" 
-                  required 
-                  autocomplete="new-password"
-                  placeholder="Repite tu contraseña"
-                />
-                <button 
-                  type="button" 
-                  class="eye-btn" 
-                  (click)="showConfirmPassword.set(!showConfirmPassword())"
-                  tabindex="-1"
-                >
-                  @if (showConfirmPassword()) {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  } @else {
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  }
-                </button>
-              </div>
-            </div>
-
-            <!-- Password Requirements Checklist -->
-            <div class="requirements-box">
-              <span class="req-title">Requisitos de seguridad:</span>
-              <ul class="req-list">
-                <li [class.valid]="hasMinLength()">
-                  <span class="icon">{{ hasMinLength() ? '✓' : '•' }}</span>
-                  <span>Mínimo 8 caracteres</span>
-                </li>
-                <li [class.valid]="hasLetters()">
-                  <span class="icon">{{ hasLetters() ? '✓' : '•' }}</span>
-                  <span>Incluye letras mayúsculas y minúsculas</span>
-                </li>
-                <li [class.valid]="hasNumbersOrSymbols()">
-                  <span class="icon">{{ hasNumbersOrSymbols() ? '✓' : '•' }}</span>
-                  <span>Al menos un número o símbolo</span>
-                </li>
-                <li [class.valid]="passwordsMatch() && confirmPassword.length > 0">
-                  <span class="icon">{{ (passwordsMatch() && confirmPassword.length > 0) ? '✓' : '•' }}</span>
-                  <span>Las contraseñas coinciden</span>
-                </li>
-              </ul>
-            </div>
-
-            <!-- Submit Button -->
-            <button 
-              type="submit" 
-              class="df-btn df-btn-primary btn-submit" 
-              [disabled]="authService.isLoading() || !isFormValid()"
-            >
-              @if (authService.isLoading()) {
-                <span class="spinner"></span>
-                <span>Guardando nueva contraseña...</span>
-              } @else {
-                <span>Actualizar Contraseña</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-              }
-            </button>
-          </form>
-
-        } @else {
-          <!-- Success State -->
-          <div class="success-state animate-fade">
-            <div class="success-icon-badge">
-              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label class="df-label">Confirmar Contraseña</label>
+            <div class="input-with-icon">
+              <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
+              <input 
+                [type]="showConfirmPassword() ? 'text' : 'password'" 
+                class="df-input auth-input" 
+                [(ngModel)]="confirmPassword" 
+                name="confirmPassword" 
+                required 
+                autocomplete="new-password"
+                placeholder="Repite tu contraseña"
+                [disabled]="authService.isLoading()"
+              />
+              <button 
+                type="button" 
+                class="eye-btn" 
+                (click)="showConfirmPassword.set(!showConfirmPassword())"
+                tabindex="-1"
+              >
+                @if (showConfirmPassword()) {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                } @else {
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                }
+              </button>
             </div>
-
-            <h2 class="success-title">¡Contraseña Actualizada!</h2>
-            <p class="success-desc">
-              Tu contraseña de administrador ha sido cambiada exitosamente. Todas tus credenciales han sido sincronizadas en el sistema seguro de Supabase.
-            </p>
-
-            <div class="redirect-countdown-box">
-              <p class="caption">Redirigiendo al inicio de sesión en <strong>{{ redirectTimer() }}</strong> segundos...</p>
-            </div>
-
-            <button 
-              type="button" 
-              class="df-btn df-btn-primary btn-submit" 
-              (click)="goToLogin()"
-            >
-              <span>Ir al Inicio de Sesión Ahora</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </button>
           </div>
-        }
+
+          <!-- Password Requirements Checklist -->
+          <div class="requirements-box">
+            <span class="req-title">Requisitos de seguridad:</span>
+            <ul class="req-list">
+              <li [class.valid]="hasMinLength()">
+                <span class="icon">{{ hasMinLength() ? '✓' : '•' }}</span>
+                <span>Mínimo 8 caracteres</span>
+              </li>
+              <li [class.valid]="hasLetters()">
+                <span class="icon">{{ hasLetters() ? '✓' : '•' }}</span>
+                <span>Incluye letras mayúsculas y minúsculas</span>
+              </li>
+              <li [class.valid]="hasNumbersOrSymbols()">
+                <span class="icon">{{ hasNumbersOrSymbols() ? '✓' : '•' }}</span>
+                <span>Al menos un número o símbolo</span>
+              </li>
+              <li [class.valid]="passwordsMatch() && confirmPassword.length > 0">
+                <span class="icon">{{ (passwordsMatch() && confirmPassword.length > 0) ? '✓' : '•' }}</span>
+                <span>Las contraseñas coinciden</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            class="df-btn df-btn-primary btn-submit" 
+            [disabled]="authService.isLoading() || !isFormValid()"
+          >
+            @if (authService.isLoading()) {
+              <span class="spinner"></span>
+              <span>Guardando nueva contraseña...</span>
+            } @else {
+              <span>Actualizar Contraseña</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+            }
+          </button>
+        </form>
 
         <!-- Back to login footer -->
         <div class="auth-footer">
@@ -243,6 +211,65 @@ import { SupabaseService } from '../../core/services/supabase.service';
         </div>
 
       </div>
+
+      <!-- Success Modal Dialog -->
+      @if (showSuccessDialog()) {
+        <div class="dialog-backdrop animate-fade" (click)="closeDialogAndRedirect()">
+          <div class="dialog-card animate-scale" (click)="$event.stopPropagation()">
+            
+            <!-- Close icon button -->
+            <button type="button" class="dialog-close-btn" (click)="closeDialogAndRedirect()" title="Cerrar y volver al login">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+
+            <!-- Success Icon Badge -->
+            <div class="dialog-badge-wrapper">
+              <div class="dialog-icon-badge">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Dialog Content -->
+            <div class="dialog-body">
+              <h3 class="dialog-title">¡Contraseña Actualizada!</h3>
+              <p class="dialog-desc">
+                La contraseña de administrador se ha cambiado exitosamente y tus credenciales han sido sincronizadas en el sistema seguro.
+              </p>
+              <div class="dialog-info-pill">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>Ya puedes iniciar sesión con tu nueva contraseña.</span>
+              </div>
+            </div>
+
+            <!-- Dialog Footer Actions -->
+            <div class="dialog-footer">
+              <button 
+                type="button" 
+                class="df-btn df-btn-primary dialog-action-btn"
+                (click)="closeDialogAndRedirect()"
+              >
+                <span>Aceptar e Iniciar Sesión</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      }
+
     </div>
   `,
   styles: [`
@@ -418,12 +445,12 @@ import { SupabaseService } from '../../core/services/supabase.service';
     }
 
     .animate-fade {
-      animation: fadeIn 0.3s ease;
+      animation: fadeIn 0.25s ease;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     /* Form Styles */
@@ -591,48 +618,6 @@ import { SupabaseService } from '../../core/services/supabase.service';
       to { transform: rotate(360deg); }
     }
 
-    /* Success State */
-    .success-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 0.5rem 0;
-    }
-
-    .success-icon-badge {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      background: rgba(107, 227, 161, 0.12);
-      border: 1px solid rgba(107, 227, 161, 0.35);
-      color: var(--df-success);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-      box-shadow: 0 0 25px rgba(107, 227, 161, 0.2);
-    }
-
-    .success-title {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--df-text-primary);
-      margin-bottom: 0.35rem;
-    }
-
-    .success-desc {
-      font-size: 0.85rem;
-      color: var(--df-text-secondary);
-      line-height: 1.45;
-      margin-bottom: 1.25rem;
-    }
-
-    .redirect-countdown-box {
-      margin-bottom: 1.25rem;
-      color: var(--df-text-muted);
-    }
-
     .auth-footer {
       margin-top: 1.75rem;
       text-align: center;
@@ -656,9 +641,149 @@ import { SupabaseService } from '../../core/services/supabase.service';
       color: var(--df-primary);
       transform: translateX(-3px);
     }
+
+    /* Dialog Modal Styles */
+    .dialog-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 13, 17, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .dialog-card {
+      width: 100%;
+      max-width: 440px;
+      background: #13171f;
+      border: 1px solid rgba(107, 227, 161, 0.3);
+      border-radius: var(--df-radius-lg);
+      padding: 2.25rem 2rem 1.75rem;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(107, 227, 161, 0.12);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .animate-scale {
+      animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .dialog-close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--df-text-muted);
+      cursor: pointer;
+      padding: 0.35rem;
+      border-radius: var(--df-radius-default);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--df-transition-fast);
+    }
+
+    .dialog-close-btn:hover {
+      color: var(--df-text-primary);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .dialog-badge-wrapper {
+      margin-bottom: 1.25rem;
+    }
+
+    .dialog-icon-badge {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(107, 227, 161, 0.2) 0%, rgba(107, 227, 161, 0.05) 70%);
+      border: 2px solid rgba(107, 227, 161, 0.4);
+      color: var(--df-success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 30px rgba(107, 227, 161, 0.3);
+      animation: pulseBadge 2s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseBadge {
+      from { transform: scale(1); box-shadow: 0 0 20px rgba(107, 227, 161, 0.25); }
+      to { transform: scale(1.04); box-shadow: 0 0 35px rgba(107, 227, 161, 0.45); }
+    }
+
+    .dialog-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .dialog-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--df-text-primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .dialog-desc {
+      font-size: 0.875rem;
+      color: var(--df-text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    .dialog-info-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: var(--df-radius-full);
+      background: rgba(174, 199, 247, 0.08);
+      border: 1px solid rgba(174, 199, 247, 0.2);
+      color: var(--df-primary);
+      font-size: 0.775rem;
+      font-weight: 500;
+    }
+
+    .dialog-footer {
+      width: 100%;
+    }
+
+    .dialog-action-btn {
+      width: 100%;
+      height: 46px;
+      font-size: 0.925rem;
+      font-weight: 700;
+      justify-content: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 16px rgba(174, 199, 247, 0.25);
+    }
   `]
 })
-export class ResetPasswordComponent implements OnInit, OnDestroy {
+export class ResetPasswordComponent implements OnInit {
   readonly authService = inject(AuthService);
   readonly supabaseService = inject(SupabaseService);
   readonly router = inject(Router);
@@ -669,10 +794,7 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
   readonly showPassword = signal<boolean>(false);
   readonly showConfirmPassword = signal<boolean>(false);
   readonly localError = signal<string | null>(null);
-  readonly resetCompleted = signal<boolean>(false);
-  readonly redirectTimer = signal<number>(5);
-
-  private countdownInterval: any = null;
+  readonly showSuccessDialog = signal<boolean>(false);
 
   // Validation rules
   readonly hasMinLength = computed(() => this.newPassword.length >= 8);
@@ -701,6 +823,13 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
     return this.hasMinLength() && this.passwordsMatch() && this.confirmPassword.length > 0;
   });
 
+  @HostListener('window:keydown.escape')
+  onEscapePress() {
+    if (this.showSuccessDialog()) {
+      this.closeDialogAndRedirect();
+    }
+  }
+
   ngOnInit() {
     this.authService.errorMessage.set(null);
   }
@@ -720,33 +849,12 @@ export class ResetPasswordComponent implements OnInit, OnDestroy {
 
     const res = await this.authService.updateUserPassword(this.newPassword);
     if (res.success) {
-      this.resetCompleted.set(true);
-      this.startRedirectCountdown();
+      this.showSuccessDialog.set(true);
     }
   }
 
-  private startRedirectCountdown() {
-    this.redirectTimer.set(5);
-    if (this.countdownInterval) clearInterval(this.countdownInterval);
-    this.countdownInterval = setInterval(() => {
-      const current = this.redirectTimer();
-      if (current <= 1) {
-        clearInterval(this.countdownInterval);
-        this.goToLogin();
-      } else {
-        this.redirectTimer.set(current - 1);
-      }
-    }, 1000);
-  }
-
-  goToLogin() {
-    if (this.countdownInterval) clearInterval(this.countdownInterval);
+  closeDialogAndRedirect() {
+    this.showSuccessDialog.set(false);
     this.router.navigate(['/login']);
-  }
-
-  ngOnDestroy() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-    }
   }
 }
