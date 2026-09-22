@@ -418,7 +418,10 @@ export class AuthService {
 
         if (error) {
           this.isLoading.set(false);
-          const errorMsg = error.message || 'No fue posible enviar el correo de recuperación.';
+          let errorMsg = error.message || 'No fue posible enviar el correo de recuperación.';
+          if (errorMsg.toLowerCase().includes('error sending') || errorMsg.toLowerCase().includes('rate limit')) {
+            errorMsg = 'Error en el servicio de correo de Supabase (límite de envíos por hora alcanzado o SMTP no configurado en Supabase Dashboard). Puedes usar la opción de restablecimiento directo.';
+          }
           this.errorMessage.set(errorMsg);
           this.notificationService.error('Error de Recuperación', errorMsg);
           return { success: false, message: errorMsg };

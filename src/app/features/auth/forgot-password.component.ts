@@ -57,7 +57,14 @@ import { SupabaseService } from '../../core/services/supabase.service';
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <span>{{ authService.errorMessage() }}</span>
+              <div class="error-msg-wrapper">
+                <span>{{ authService.errorMessage() }}</span>
+                @if (email.trim()) {
+                  <a [routerLink]="['/reset-password']" [queryParams]="{ email: email.trim() }" class="direct-recovery-btn">
+                    🔑 Restablecer contraseña directamente para este correo →
+                  </a>
+                }
+              </div>
             </div>
           }
 
@@ -366,15 +373,37 @@ import { SupabaseService } from '../../core/services/supabase.service';
     /* Error Alert */
     .error-alert {
       display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      background: rgba(255, 180, 171, 0.1);
-      border: 1px solid rgba(255, 180, 171, 0.3);
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: rgba(255, 180, 171, 0.12);
+      border: 1px solid rgba(255, 180, 171, 0.35);
       color: var(--df-error);
-      padding: 0.75rem 1rem;
+      padding: 0.85rem 1rem;
       border-radius: var(--df-radius-default);
       font-size: 0.825rem;
       margin-bottom: 1.25rem;
+    }
+
+    .error-msg-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .direct-recovery-btn {
+      display: inline-block;
+      color: var(--df-primary);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.82rem;
+      margin-top: 0.25rem;
+      transition: all var(--df-transition-fast);
+    }
+
+    .direct-recovery-btn:hover {
+      text-decoration: underline;
+      color: #fff;
     }
 
     .animate-fade {
