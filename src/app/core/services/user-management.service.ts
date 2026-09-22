@@ -93,7 +93,12 @@ export class UserManagementService {
           };
         });
 
-        this.saveAdmins(fromDb);
+        // Retain local-only admins that might not have synced to profiles yet
+        const dbIds = new Set(data.map(p => p.id));
+        const dbEmails = new Set(data.map(p => (p.email || '').toLowerCase()));
+        const localOnly = this.admins().filter(a => !dbIds.has(a.id) && !dbEmails.has((a.email || '').toLowerCase()));
+
+        this.saveAdmins([...fromDb, ...localOnly]);
       }
     } catch (e) {
       console.warn('Could not sync admins from Supabase:', e);

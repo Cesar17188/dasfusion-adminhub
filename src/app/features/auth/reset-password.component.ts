@@ -791,6 +791,7 @@ export class ResetPasswordComponent implements OnInit {
 
   newPassword = '';
   confirmPassword = '';
+  targetEmail = '';
   readonly showPassword = signal<boolean>(false);
   readonly showConfirmPassword = signal<boolean>(false);
   readonly localError = signal<string | null>(null);
@@ -830,8 +831,39 @@ export class ResetPasswordComponent implements OnInit {
     }
   }
 
-  ngOnInit() {
+  async ngOnInit() {
     this.authService.errorMessage.set(null);
+
+    // Capture email from query params if present
+    const emailParam = this.route.snapshot.queryParamMap.get('email');
+    if (emailParam) {
+      this.targetEmail = emailParam;
+    }
+
+    // Check if recovery code is present (Supabase PKCE flow)
+    const code = this.route.snapshot.queryParamMap.get('code');
+    const client = this.supabaseService.getClient();
+    if (client) {
+      if (code) {
+        try {
+          const { data } = await client.auth.exchangeCodeForSession(code);
+          if (data?.session?.user?.email) {
+            this.targetEmail = data.session.user.email;
+          }
+        } catch (err) {
+          console.warn('Could not exchange recovery code for session:', err);
+        }
+      } else {
+        try {
+          const { data } = await client.auth.getSession();
+          if (data?.session?.user?.email) {
+            this.targetEmail = data.session.user.email;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
   }
 
   async handleResetPassword() {
@@ -847,7 +879,7 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
-    const res = await this.authService.updateUserPassword(this.newPassword);
+    const res = await this.authService.updateUserPassword(this.newPassword, this.targetEmail);
     if (res.success) {
       this.showSuccessDialog.set(true);
     }
