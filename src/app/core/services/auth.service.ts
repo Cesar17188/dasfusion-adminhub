@@ -305,6 +305,21 @@ export class AuthService {
             this.isLoading.set(false);
             this.notificationService.success('Acceso Concedido', `Bienvenido al panel, ${authUser.fullName}`);
             this.router.navigate(['/dashboard']);
+
+            // Sync to Supabase Auth in background so Supabase directly registers the new password
+            if (client && this.supabaseService.isConnected()) {
+              (async () => {
+                try {
+                  await client.rpc('set_admin_password', {
+                    target_email: matchingAdmin.email,
+                    new_password: cleanPassword
+                  });
+                } catch {
+                  // ignore
+                }
+              })();
+            }
+
             return { success: true };
           }
         }

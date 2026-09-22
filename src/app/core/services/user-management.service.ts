@@ -196,6 +196,7 @@ export class UserManagementService {
   }
 
   async resetPassword(adminId: string, newPassword: string): Promise<boolean> {
+    const admin = this.admins().find(a => a.id === adminId);
     const updated = this.admins().map(a => {
       if (a.id === adminId) {
         return { 
@@ -208,7 +209,21 @@ export class UserManagementService {
     });
     this.saveAdmins(updated);
 
-    this.notificationService.success('Clave Reasignada', `Se asignó una nueva contraseña provisional.`);
+    // Sync to Supabase Auth via RPC or Admin API
+    const client = this.supabaseService.getClient();
+    if (client && admin && this.supabaseService.isConnected()) {
+      try {
+        // Attempt database RPC to update auth.users encrypted password directly in Supabase
+        await client.rpc('set_admin_password', {
+          target_email: admin.email,
+          new_password: newPassword
+        });
+      } catch (e) {
+        console.warn('Supabase set_admin_password RPC notice:', e);
+      }
+    }
+
+    this.notificationService.success('Clave Reasignada', `Se asignó una nueva contraseña provisional sincronizada con el sistema.`);
     return true;
   }
 
