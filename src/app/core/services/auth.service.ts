@@ -407,7 +407,11 @@ export class AuthService {
 
     if (client && this.supabaseService.isConnected()) {
       try {
-        const redirectTo = `${window.location.origin}/reset-password?email=${encodeURIComponent(email)}`;
+        const origin = window.location.origin;
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname.includes('127.0.0.1');
+        const baseUrl = isLocal ? origin : (origin.includes('cpprojects.dasfusion.ec') ? origin : 'https://cpprojects.dasfusion.ec');
+        const redirectTo = `${baseUrl}/reset-password`;
+
         const { data, error } = await client.auth.resetPasswordForEmail(email, {
           redirectTo
         });
