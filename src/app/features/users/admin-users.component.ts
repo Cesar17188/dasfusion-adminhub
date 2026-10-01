@@ -6,6 +6,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { ModalComponent } from '../../shared/components/modal.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { AdminUser, CreateAdminDto } from '../../core/models/user-management.model';
+import { UserRole } from '../../core/models/profile.model';
 
 @Component({
   selector: 'app-admin-users',
@@ -18,11 +19,11 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
         <div>
           <div class="page-tag">
             <span class="df-pill df-pill-primary">SEGURIDAD & ROLES</span>
-            <span class="caption">Supabase Profiles</span>
+            <span class="caption">Supabase Auth & Profiles</span>
           </div>
-          <h1 class="headline-md page-title">Administración de Usuarios del Sistema</h1>
+          <h1 class="headline-md page-title">Gestión de Usuarios y Roles</h1>
           <p class="body-md page-subtitle">
-            Gestión de cuentas con rol <strong>admin</strong>, asignación de contraseñas provisionales y permisos del CRM.
+            Administra los roles de acceso (<strong>admin</strong> y <strong>client</strong>), asigna contraseñas provisionales y gestiona permisos del sistema.
           </p>
         </div>
 
@@ -31,46 +32,46 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          <span>+ Nuevo Administrador</span>
+          <span>+ Nuevo Usuario</span>
         </button>
       </div>
 
       <!-- KPI Metrics Row -->
       <div class="metrics-grid">
         <div class="metric-card df-card">
-          <div class="metric-icon-box">🛡️</div>
+          <div class="metric-icon-box">👥</div>
           <div class="metric-info">
-            <span class="caption metric-label">Total Administradores</span>
+            <span class="caption metric-label">Total Usuarios</span>
+            <h3 class="headline-sm metric-value">{{ userService.totalUsers() }}</h3>
+          </div>
+        </div>
+
+        <div class="metric-card df-card">
+          <div class="metric-icon-box admin-badge-box">🛡️</div>
+          <div class="metric-info">
+            <span class="caption metric-label">Administradores</span>
             <h3 class="headline-sm metric-value">{{ userService.totalAdmins() }}</h3>
           </div>
         </div>
 
         <div class="metric-card df-card">
-          <div class="metric-icon-box online">⚡</div>
+          <div class="metric-icon-box client-badge-box">👤</div>
           <div class="metric-info">
-            <span class="caption metric-label">Cuentas Activas</span>
-            <h3 class="headline-sm metric-value">{{ userService.activeAdmins() }}</h3>
+            <span class="caption metric-label">Clientes / Portal</span>
+            <h3 class="headline-sm metric-value">{{ userService.totalClients() }}</h3>
           </div>
         </div>
 
         <div class="metric-card df-card">
           <div class="metric-icon-box warning">🔑</div>
           <div class="metric-info">
-            <span class="caption metric-label">Con Clave Provisional</span>
+            <span class="caption metric-label">Claves Provisionales</span>
             <h3 class="headline-sm metric-value">{{ userService.provisionalAdmins() }}</h3>
-          </div>
-        </div>
-
-        <div class="metric-card df-card">
-          <div class="metric-icon-box rls">🔒</div>
-          <div class="metric-info">
-            <span class="caption metric-label">Nivel de Seguridad</span>
-            <h3 class="headline-sm metric-value" style="color: var(--df-success);">RLS Activo</h3>
           </div>
         </div>
       </div>
 
-      <!-- Search & Controls Bar -->
+      <!-- Search & Filter Controls Bar -->
       <div class="controls-bar df-card">
         <div class="search-box">
           <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -85,72 +86,127 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
             (ngModelChange)="userService.searchQuery.set($event)"
           />
         </div>
+
+        <!-- Role Filter Tabs -->
+        <div class="role-filter-group">
+          <button 
+            type="button" 
+            class="role-filter-btn" 
+            [class.active]="userService.roleFilter() === 'all'"
+            (click)="userService.roleFilter.set('all')"
+          >
+            Todos ({{ userService.totalUsers() }})
+          </button>
+          <button 
+            type="button" 
+            class="role-filter-btn" 
+            [class.active]="userService.roleFilter() === 'admin'"
+            (click)="userService.roleFilter.set('admin')"
+          >
+            🛡️ Admins ({{ userService.totalAdmins() }})
+          </button>
+          <button 
+            type="button" 
+            class="role-filter-btn" 
+            [class.active]="userService.roleFilter() === 'client'"
+            (click)="userService.roleFilter.set('client')"
+          >
+            👤 Clientes ({{ userService.totalClients() }})
+          </button>
+        </div>
+
         <button type="button" class="df-btn df-btn-secondary btn-sync" (click)="userService.syncWithSupabase()">
-          🔄 Sincronizar con Supabase
+          🔄 Sincronizar Supabase
         </button>
       </div>
 
-      <!-- Admins Table -->
+      <!-- Users Table -->
       <div class="df-table-container">
         <table class="df-table">
           <thead>
             <tr>
-              <th>Administrador</th>
+              <th>Usuario</th>
               <th>Correo Electrónico</th>
-              <th>Rol Base de Datos</th>
-              <th>Estado de Acceso</th>
+              <th>Rol Actual</th>
+              <th>Cambiar Rol</th>
+              <th>Estado Acceso</th>
               <th>Clave Provisional</th>
-              <th>Fecha de Registro</th>
+              <th>Fecha Registro</th>
               <th style="text-align: right;">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            @for (admin of userService.filteredAdmins(); track admin.id) {
-              <tr>
+            @for (user of userService.filteredAdmins(); track user.id) {
+              <tr [class.row-highlight-admin]="user.role === 'admin'">
                 <td>
                   <div class="user-cell">
-                    <div class="user-avatar-circle">
-                      {{ admin.fullName.charAt(0) }}
+                    <div class="user-avatar-circle" [class.avatar-client]="user.role === 'client'">
+                      {{ user.fullName.charAt(0) }}
                     </div>
                     <div>
-                      <strong class="user-name-text">{{ admin.fullName }}</strong>
-                      <span class="caption user-title-text">{{ admin.professionalTitle }}</span>
+                      <strong class="user-name-text">{{ user.fullName }}</strong>
+                      <span class="caption user-title-text">{{ user.professionalTitle }}</span>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <span class="mono email-text">{{ admin.email }}</span>
+                  <span class="mono email-text">{{ user.email }}</span>
                 </td>
                 <td>
-                  <span class="df-pill df-pill-primary">
-                    {{ admin.role.toUpperCase() }}
-                  </span>
+                  @if (user.role === 'admin') {
+                    <span class="df-pill df-pill-primary role-badge">
+                      🛡️ ADMIN
+                    </span>
+                  } @else if (user.role === 'client') {
+                    <span class="df-pill df-pill-success role-badge">
+                      👤 CLIENTE
+                    </span>
+                  } @else {
+                    <span class="df-pill df-pill-warning role-badge">
+                      💻 {{ user.role.toUpperCase() }}
+                    </span>
+                  }
                 </td>
                 <td>
-                  @if (admin.status === 'provisional_password') {
+                  <!-- Fast Role Toggle Switcher -->
+                  <div class="role-selector-wrapper">
+                    <select 
+                      class="df-input df-select-sm role-select-input"
+                      [ngModel]="user.role"
+                      (ngModelChange)="onRoleChangeRequested(user, $event)"
+                      [disabled]="user.email === 'admin@dasfusion.io'"
+                    >
+                      <option value="admin">🛡️ Rol Admin</option>
+                      <option value="client">👤 Rol Cliente</option>
+                      <option value="developer">💻 Rol Developer</option>
+                    </select>
+                  </div>
+                </td>
+                <td>
+                  @if (user.status === 'provisional_password') {
                     <span class="df-pill df-pill-warning">Clave Provisional</span>
                   } @else {
                     <span class="df-pill df-pill-success">Activo</span>
                   }
                 </td>
                 <td>
-                  @if (admin.provisionalPassword) {
+                  @if (user.provisionalPassword) {
                     <div class="password-cell">
                       <span class="mono password-val">
-                        {{ visiblePasswords()[admin.id] ? admin.provisionalPassword : '••••••••' }}
+                        {{ visiblePasswords()[user.id] ? user.provisionalPassword : '••••••••' }}
                       </span>
                       <button 
                         type="button" 
                         class="df-btn-icon df-btn-ghost btn-tiny"
-                        (click)="togglePasswordVisibility(admin.id)"
+                        (click)="togglePasswordVisibility(user.id)"
                         title="Ver / Ocultar"
                       >
-                        {{ visiblePasswords()[admin.id] ? '🙈' : '👁️' }}
+                        {{ visiblePasswords()[user.id] ? '🙈' : '👁️' }}
                       </button>
                       <button 
                         type="button" 
                         class="df-btn-icon df-btn-ghost btn-tiny"
-                        (click)="copyCredentials(admin)"
+                        (click)="copyCredentials(user)"
                         title="Copiar credenciales completas"
                       >
                         📋
@@ -161,23 +217,46 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
                   }
                 </td>
                 <td>
-                  <span class="caption">{{ admin.createdAt | date:'mediumDate' }}</span>
+                  <span class="caption">{{ user.createdAt | date:'mediumDate' }}</span>
                 </td>
                 <td>
                   <div class="actions-cell">
+                    @if (user.role === 'admin') {
+                      <button 
+                        type="button" 
+                        class="df-btn df-btn-sm df-btn-ghost btn-quick-role"
+                        (click)="confirmRoleChange(user, 'client')"
+                        [disabled]="user.email === 'admin@dasfusion.io'"
+                        title="Cambiar a rol Cliente"
+                      >
+                        Pasar a Cliente
+                      </button>
+                    } @else {
+                      <button 
+                        type="button" 
+                        class="df-btn df-btn-sm df-btn-ghost btn-quick-role promote-btn"
+                        (click)="confirmRoleChange(user, 'admin')"
+                        title="Promover a rol Administrador"
+                      >
+                        Hacer Admin
+                      </button>
+                    }
+
                     <button 
                       type="button" 
                       class="df-btn df-btn-sm df-btn-secondary"
-                      (click)="openResetModal(admin)"
+                      (click)="openResetModal(user)"
                       title="Asignar nueva contraseña provisional"
                     >
-                      🔑 Cambiar Clave
+                      🔑 Clave
                     </button>
+
                     <button 
                       type="button" 
                       class="df-btn-icon df-btn-ghost text-danger"
-                      (click)="confirmDelete(admin)"
-                      title="Eliminar administrador"
+                      (click)="confirmDelete(user)"
+                      [disabled]="user.email === 'admin@dasfusion.io'"
+                      title="Eliminar usuario"
                     >
                       🗑️
                     </button>
@@ -186,10 +265,10 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
               </tr>
             } @empty {
               <tr>
-                <td colspan="7">
+                <td colspan="8">
                   <app-empty-state 
-                    title="No se encontraron administradores"
-                    description="Intenta buscar con otros términos o registra un nuevo usuario administrador con su clave provisional."
+                    title="No se encontraron usuarios"
+                    description="Intenta buscar con otros términos o ajusta el filtro de roles (Todos, Admins, Clientes)."
                   ></app-empty-state>
                 </td>
               </tr>
@@ -198,17 +277,56 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
         </table>
       </div>
 
-      <!-- Modal: Crear Nuevo Administrador -->
+      <!-- Modal: Crear Nuevo Usuario -->
       <app-modal 
         [isOpen]="isCreateOpen()" 
-        title="Registrar Nuevo Administrador" 
+        title="Registrar Nuevo Usuario / Administrador" 
         size="md" 
         (closed)="isCreateOpen.set(false)"
       >
         <form (ngSubmit)="submitCreateAdmin()" class="modal-form">
           <p class="body-sm form-intro">
-            Crea un acceso con rol <strong>admin</strong> en la base de datos Supabase. Podrás asignarle una contraseña provisional de tiempo indefinido para que ingrese de inmediato.
+            Crea un acceso en Supabase Auth y asigna su rol en la tabla de perfiles (<strong>admin</strong> para acceso al CRM o <strong>client</strong> para acceso al Portal de Clientes).
           </p>
+
+          <div class="form-group">
+            <label class="df-label">Rol del Usuario *</label>
+            <div class="role-selection-grid">
+              <label class="role-radio-card" [class.selected]="newAdmin.role === 'admin'">
+                <input 
+                  type="radio" 
+                  name="userRole" 
+                  value="admin" 
+                  [(ngModel)]="newAdmin.role"
+                  (change)="onNewUserRoleChanged('admin')"
+                />
+                <div class="role-card-content">
+                  <span class="role-icon">🛡️</span>
+                  <div>
+                    <strong>Administrador</strong>
+                    <span class="caption">Acceso completo al CRM y proyectos</span>
+                  </div>
+                </div>
+              </label>
+
+              <label class="role-radio-card" [class.selected]="newAdmin.role === 'client'">
+                <input 
+                  type="radio" 
+                  name="userRole" 
+                  value="client" 
+                  [(ngModel)]="newAdmin.role"
+                  (change)="onNewUserRoleChanged('client')"
+                />
+                <div class="role-card-content">
+                  <span class="role-icon">👤</span>
+                  <div>
+                    <strong>Cliente</strong>
+                    <span class="caption">Acceso al portal y seguimiento</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
 
           <div class="form-group">
             <label class="df-label">Nombre Completo *</label>
@@ -241,7 +359,7 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
               class="df-input" 
               [(ngModel)]="newAdmin.professionalTitle" 
               name="ftitle" 
-              placeholder="Ej. Senior Frontend Developer & QA Lead" 
+              [placeholder]="newAdmin.role === 'admin' ? 'Ej. Principal Tech Lead' : 'Ej. Cliente Corporativo / Director'" 
             />
           </div>
 
@@ -277,9 +395,55 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
 
           <div footer>
             <button type="button" class="df-btn df-btn-ghost" (click)="isCreateOpen.set(false)">Cancelar</button>
-            <button type="submit" class="df-btn df-btn-primary">Guardar Administrador</button>
+            <button type="submit" class="df-btn df-btn-primary">Guardar Usuario</button>
           </div>
         </form>
+      </app-modal>
+
+      <!-- Modal: Confirmar Cambio de Rol -->
+      <app-modal 
+        [isOpen]="isConfirmRoleOpen()" 
+        title="Confirmar Cambio de Rol" 
+        size="sm" 
+        (closed)="isConfirmRoleOpen.set(false)"
+      >
+        @if (selectedUserForRoleChange()) {
+          <div class="modal-form">
+            <div class="role-change-preview">
+              <div class="role-badge-from">
+                <span class="caption">Rol Actual:</span>
+                <span class="df-pill" [class.df-pill-primary]="selectedUserForRoleChange()?.role === 'admin'" [class.df-pill-success]="selectedUserForRoleChange()?.role === 'client'">
+                  {{ selectedUserForRoleChange()?.role?.toUpperCase() }}
+                </span>
+              </div>
+              <span class="arrow-indicator">➔</span>
+              <div class="role-badge-to">
+                <span class="caption">Nuevo Rol:</span>
+                <span class="df-pill" [class.df-pill-primary]="targetRoleForChange() === 'admin'" [class.df-pill-success]="targetRoleForChange() === 'client'">
+                  {{ targetRoleForChange().toUpperCase() }}
+                </span>
+              </div>
+            </div>
+
+            <p class="body-sm">
+              ¿Deseas cambiar el rol de <strong>{{ selectedUserForRoleChange()?.fullName }}</strong> ({{ selectedUserForRoleChange()?.email }}) a 
+              <strong>{{ targetRoleForChange() === 'admin' ? 'Administrador' : 'Cliente' }}</strong>?
+            </p>
+
+            <div class="role-impact-note" [class.warning-note]="targetRoleForChange() === 'client'">
+              @if (targetRoleForChange() === 'client') {
+                ⚠️ <strong>Aviso:</strong> Al pasar a rol <em>Cliente</em>, este usuario no podrá iniciar sesión en este panel administrativo y solo tendrá acceso a los servicios de portal para clientes.
+              } @else {
+                🛡️ <strong>Aviso:</strong> Al pasar a rol <em>Administrador</em>, este usuario obtendrá acceso completo para gestionar el CRM, Kanban, proyectos y configuraciones.
+              }
+            </div>
+
+            <div footer>
+              <button type="button" class="df-btn df-btn-ghost" (click)="isConfirmRoleOpen.set(false)">Cancelar</button>
+              <button type="button" class="df-btn df-btn-primary" (click)="executeRoleChange()">Confirmar Cambio</button>
+            </div>
+          </div>
+        }
       </app-modal>
 
       <!-- Modal: Reasignar Contraseña Provisional -->
@@ -420,16 +584,18 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       flex-shrink: 0;
     }
 
-    .metric-icon-box.online {
-      background: rgba(107, 227, 161, 0.1);
+    .metric-icon-box.admin-badge-box {
+      background: rgba(174, 199, 247, 0.15);
+      border: 1px solid rgba(174, 199, 247, 0.3);
+    }
+
+    .metric-icon-box.client-badge-box {
+      background: rgba(107, 227, 161, 0.12);
+      border: 1px solid rgba(107, 227, 161, 0.25);
     }
 
     .metric-icon-box.warning {
       background: rgba(246, 178, 107, 0.1);
-    }
-
-    .metric-icon-box.rls {
-      background: rgba(107, 227, 161, 0.1);
     }
 
     .metric-info {
@@ -460,7 +626,7 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       gap: 0.75rem;
     }
 
-    @media (min-width: 640px) {
+    @media (min-width: 900px) {
       .controls-bar {
         flex-direction: row;
         align-items: center;
@@ -473,7 +639,7 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       width: 100%;
     }
 
-    @media (min-width: 640px) {
+    @media (min-width: 900px) {
       .btn-sync {
         width: auto;
       }
@@ -483,6 +649,7 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       position: relative;
       flex: 1;
       width: 100%;
+      min-width: 240px;
     }
 
     .search-icon {
@@ -495,6 +662,41 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
 
     .search-input {
       padding-left: 2.25rem;
+    }
+
+    /* Role Filter Tabs */
+    .role-filter-group {
+      display: flex;
+      align-items: center;
+      background: var(--df-surface-container-high);
+      padding: 0.25rem;
+      border-radius: var(--df-radius-default);
+      gap: 0.25rem;
+      overflow-x: auto;
+    }
+
+    .role-filter-btn {
+      background: transparent;
+      border: none;
+      color: var(--df-text-secondary);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: var(--df-radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all var(--df-transition-fast);
+    }
+
+    .role-filter-btn:hover {
+      color: var(--df-text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .role-filter-btn.active {
+      background: var(--df-surface-container-highest);
+      color: var(--df-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     /* Table elements */
@@ -517,6 +719,11 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       font-size: 0.9rem;
     }
 
+    .user-avatar-circle.avatar-client {
+      background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+      color: #e8f5e9;
+    }
+
     .user-name-text {
       display: block;
       color: var(--df-text-primary);
@@ -529,6 +736,30 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
     .email-text {
       color: var(--df-on-surface);
       font-size: 0.85rem;
+    }
+
+    .role-badge {
+      font-size: 0.725rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .role-selector-wrapper {
+      display: inline-block;
+    }
+
+    .role-select-input {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: var(--df-radius-sm);
+      background-color: var(--df-surface-container-high);
+      border: 1px solid var(--df-border-subtle);
+      color: var(--df-text-primary);
+      cursor: pointer;
+    }
+
+    .role-select-input:focus {
+      border-color: var(--df-primary);
     }
 
     .password-cell {
@@ -555,7 +786,29 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       display: flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 0.5rem;
+      gap: 0.4rem;
+    }
+
+    .btn-quick-role {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      color: var(--df-text-secondary);
+      border: 1px solid var(--df-border-subtle);
+    }
+
+    .btn-quick-role:hover {
+      color: var(--df-text-primary);
+      border-color: var(--df-primary);
+    }
+
+    .btn-quick-role.promote-btn {
+      color: var(--df-primary);
+      border-color: rgba(174, 199, 247, 0.4);
+      background: rgba(174, 199, 247, 0.05);
+    }
+
+    .btn-quick-role.promote-btn:hover {
+      background: rgba(174, 199, 247, 0.15);
     }
 
     .text-danger {
@@ -574,6 +827,52 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       background: var(--df-surface-container-low);
       padding: 0.75rem 1rem;
       border-radius: var(--df-radius-default);
+    }
+
+    .role-selection-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .role-radio-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem;
+      background: var(--df-surface-container-high);
+      border: 1px solid var(--df-border-subtle);
+      border-radius: var(--df-radius-default);
+      cursor: pointer;
+      transition: all var(--df-transition-fast);
+    }
+
+    .role-radio-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .role-radio-card.selected {
+      border-color: var(--df-primary);
+      background: rgba(174, 199, 247, 0.1);
+      box-shadow: 0 0 0 1px var(--df-primary);
+    }
+
+    .role-card-content {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .role-icon {
+      font-size: 1.35rem;
+    }
+
+    .role-card-content strong {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--df-text-primary);
     }
 
     .label-with-action {
@@ -610,6 +909,44 @@ import { AdminUser, CreateAdminDto } from '../../core/models/user-management.mod
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }
+
+    /* Role Change Preview Modal */
+    .role-change-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--df-surface-container-high);
+      border-radius: var(--df-radius-default);
+    }
+
+    .role-badge-from, .role-badge-to {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .arrow-indicator {
+      font-size: 1.25rem;
+      color: var(--df-text-muted);
+    }
+
+    .role-impact-note {
+      padding: 0.75rem 1rem;
+      border-radius: var(--df-radius-default);
+      font-size: 0.825rem;
+      line-height: 1.4;
+      background: rgba(174, 199, 247, 0.1);
+      border-left: 3px solid var(--df-primary);
+      color: var(--df-text-primary);
+    }
+
+    .role-impact-note.warning-note {
+      background: rgba(246, 178, 107, 0.12);
+      border-left-color: var(--df-warning);
+    }
   `]
 })
 export class AdminUsersComponent {
@@ -618,6 +955,10 @@ export class AdminUsersComponent {
 
   readonly isCreateOpen = signal<boolean>(false);
   readonly isResetOpen = signal<boolean>(false);
+  readonly isConfirmRoleOpen = signal<boolean>(false);
+  readonly selectedUserForRoleChange = signal<AdminUser | null>(null);
+  readonly targetRoleForChange = signal<UserRole>('admin');
+
   readonly selectedAdminForReset = signal<AdminUser | null>(null);
   readonly showNewPass = signal<boolean>(false);
   readonly visiblePasswords = signal<Record<string, boolean>>({});
@@ -643,6 +984,15 @@ export class AdminUsersComponent {
     this.isCreateOpen.set(true);
   }
 
+  onNewUserRoleChanged(role: UserRole) {
+    this.newAdmin.role = role;
+    if (role === 'admin' && (!this.newAdmin.professionalTitle || this.newAdmin.professionalTitle.includes('Cliente'))) {
+      this.newAdmin.professionalTitle = 'Administrador del Sistema';
+    } else if (role === 'client' && (!this.newAdmin.professionalTitle || this.newAdmin.professionalTitle.includes('Administrador'))) {
+      this.newAdmin.professionalTitle = 'Cliente / Usuario';
+    }
+  }
+
   generatePasswordForNewAdmin() {
     this.newAdmin.password = this.userService.generateProvisionalPassword();
     this.showNewPass.set(true);
@@ -659,7 +1009,8 @@ export class AdminUsersComponent {
   }
 
   async copyCredentials(admin: AdminUser) {
-    const text = `🔐 CREDENCIALES DE ACCESO DASFUSION ADMIN\n\n👤 Nombre: ${admin.fullName}\n📧 Correo: ${admin.email}\n🔑 Clave Provisional: ${admin.provisionalPassword || '(Clave personalizada)'}\n🔗 Ingreso: http://localhost:4200/login`;
+    const roleLabel = admin.role === 'admin' ? 'Administrador' : 'Cliente';
+    const text = `🔐 CREDENCIALES DE ACCESO DASFUSION\n\n👤 Nombre: ${admin.fullName}\n📧 Correo: ${admin.email}\n🏷️ Rol: ${roleLabel}\n🔑 Clave Provisional: ${admin.provisionalPassword || '(Clave personalizada)'}\n🔗 Ingreso: http://localhost:4200/login`;
     
     try {
       await navigator.clipboard.writeText(text);
@@ -682,6 +1033,32 @@ export class AdminUsersComponent {
     }
   }
 
+  onRoleChangeRequested(user: AdminUser, newRole: UserRole) {
+    if (user.role === newRole) return;
+    this.confirmRoleChange(user, newRole);
+  }
+
+  confirmRoleChange(user: AdminUser, newRole: UserRole) {
+    if (user.email === 'admin@dasfusion.io' && newRole !== 'admin') {
+      this.notificationService.error('Acción Denegada', 'No puedes cambiar el rol del administrador principal.');
+      return;
+    }
+
+    this.selectedUserForRoleChange.set(user);
+    this.targetRoleForChange.set(newRole);
+    this.isConfirmRoleOpen.set(true);
+  }
+
+  async executeRoleChange() {
+    const user = this.selectedUserForRoleChange();
+    const newRole = this.targetRoleForChange();
+
+    if (!user) return;
+
+    this.isConfirmRoleOpen.set(false);
+    await this.userService.updateUserRole(user.id, newRole);
+  }
+
   openResetModal(admin: AdminUser) {
     this.selectedAdminForReset.set(admin);
     this.resetPasswordVal = this.userService.generateProvisionalPassword();
@@ -700,8 +1077,9 @@ export class AdminUsersComponent {
   }
 
   confirmDelete(admin: AdminUser) {
-    if (confirm(`¿Estás seguro de revocar el acceso y eliminar al administrador "${admin.fullName}" (${admin.email})?`)) {
+    if (confirm(`¿Estás seguro de revocar el acceso y eliminar al usuario "${admin.fullName}" (${admin.email})?`)) {
       this.userService.deleteAdmin(admin.id);
     }
   }
 }
+

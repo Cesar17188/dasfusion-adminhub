@@ -20,3 +20,4 @@ export interface CreateAdminDto {
   professionalTitle?: string;
   role?: UserRole;
 }
+

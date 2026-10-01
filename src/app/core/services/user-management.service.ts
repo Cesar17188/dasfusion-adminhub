@@ -1,11 +1,10 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { AdminUser, CreateAdminDto } from '../models/user-management.model';
+import { UserRole } from '../models/profile.model';
 import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 
 const STORAGE_KEY_ADMINS = 'df_admin_users_list';
-
-const INITIAL_ADMINS: AdminUser[] = [];
 
 @Injectable({
   providedIn: 'root'
@@ -16,19 +15,28 @@ export class UserManagementService {
 
   readonly admins = signal<AdminUser[]>(this.loadStoredAdmins());
   readonly searchQuery = signal<string>('');
+  readonly roleFilter = signal<UserRole | 'all'>('all');
   readonly selectedAdminId = signal<string | null>(null);
 
   readonly filteredAdmins = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
-    return this.admins().filter(u => 
-      !q ||
-      u.fullName.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.professionalTitle.toLowerCase().includes(q)
-    );
+    const role = this.roleFilter();
+
+    return this.admins().filter(u => {
+      const matchesQuery = !q ||
+        u.fullName.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.professionalTitle.toLowerCase().includes(q);
+
+      const matchesRole = role === 'all' || u.role === role;
+
+      return matchesQuery && matchesRole;
+    });
   });
 
-  readonly totalAdmins = computed(() => this.admins().length);
+  readonly totalUsers = computed(() => this.admins().length);
+  readonly totalAdmins = computed(() => this.admins().filter(u => u.role === 'admin').length);
+  readonly totalClients = computed(() => this.admins().filter(u => u.role === 'client').length);
   readonly activeAdmins = computed(() => this.admins().filter(u => u.status === 'active').length);
   readonly provisionalAdmins = computed(() => this.admins().filter(u => u.status === 'provisional_password').length);
 
@@ -70,21 +78,28 @@ export class UserManagementService {
     if (!client) return;
 
     try {
-      const { data } = await client
+      const { data, error } = await client
         .from(this.supabaseService.config().tableNameProfiles || 'profiles')
         .select('*')
-        .eq('role', 'admin')
         .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error fetching profiles from Supabase:', error);
+        return;
+      }
 
       if (data) {
         const fromDb: AdminUser[] = data.map(p => {
           const existing = this.admins().find(a => a.id === p.id || a.email === p.email);
+          const rawRole = (p.role || 'client').toLowerCase();
+          const mappedRole: UserRole = rawRole === 'admin' ? 'admin' : (rawRole === 'developer' ? 'developer' : 'client');
+
           return {
             id: p.id,
-            fullName: p.full_name || p.email?.split('@')[0] || 'Administrador',
-            email: p.email || existing?.email || 'admin@dasfusion.io',
-            professionalTitle: p.professional_title || existing?.professionalTitle || 'Administrador del Sistema',
-            role: 'admin',
+            fullName: p.full_name || p.email?.split('@')[0] || 'Usuario',
+            email: p.email || existing?.email || 'usuario@dasfusion.io',
+            professionalTitle: p.professional_title || existing?.professionalTitle || (mappedRole === 'admin' ? 'Administrador del Sistema' : 'Cliente / Usuario'),
+            role: mappedRole,
             avatarUrl: p.avatar_url || existing?.avatarUrl,
             status: existing?.status || 'active',
             provisionalPassword: existing?.provisionalPassword,
@@ -93,7 +108,7 @@ export class UserManagementService {
           };
         });
 
-        // Retain local-only admins that might not have synced to profiles yet
+        // Retain local-only users that might not have synced to profiles yet
         const dbIds = new Set(data.map(p => p.id));
         const dbEmails = new Set(data.map(p => (p.email || '').toLowerCase()));
         const localOnly = this.admins().filter(a => !dbIds.has(a.id) && !dbEmails.has((a.email || '').toLowerCase()));
@@ -101,12 +116,78 @@ export class UserManagementService {
         this.saveAdmins([...fromDb, ...localOnly]);
       }
     } catch (e) {
-      console.warn('Could not sync admins from Supabase:', e);
+      console.warn('Could not sync users from Supabase:', e);
     }
   }
 
+  async updateUserRole(id: string, newRole: UserRole): Promise<boolean> {
+    const target = this.admins().find(a => a.id === id);
+    if (!target) {
+      this.notificationService.error('Error', 'Usuario no encontrado en el sistema.');
+      return false;
+    }
+
+    if (target.email === 'admin@dasfusion.io' && newRole !== 'admin') {
+      this.notificationService.error('Acción Denegada', 'No puedes quitar el rol de administrador a la cuenta principal del sistema.');
+      return false;
+    }
+
+    // Check if we are demoting the only admin
+    if (target.role === 'admin' && newRole !== 'admin' && this.totalAdmins() <= 1) {
+      this.notificationService.warning('Advertencia de Seguridad', 'Debe existir al menos un usuario con rol de Administrador.');
+      return false;
+    }
+
+    const previousRole = target.role;
+    const defaultTitle = newRole === 'admin' 
+      ? (target.professionalTitle === 'Cliente / Usuario' ? 'Administrador del Sistema' : target.professionalTitle)
+      : (target.professionalTitle === 'Administrador del Sistema' ? 'Cliente / Usuario' : target.professionalTitle);
+
+    const updated = this.admins().map(a => {
+      if (a.id === id) {
+        return { 
+          ...a, 
+          role: newRole,
+          professionalTitle: defaultTitle
+        };
+      }
+      return a;
+    });
+
+    this.saveAdmins(updated);
+
+    // Sync to Supabase profiles
+    const client = this.supabaseService.getClient();
+    if (client && !id.startsWith('admin-')) {
+      try {
+        const { error } = await client
+          .from(this.supabaseService.config().tableNameProfiles || 'profiles')
+          .update({ 
+            role: newRole,
+            professional_title: defaultTitle
+          })
+          .eq('id', id);
+
+        if (error) {
+          console.warn('Error updating role in Supabase profiles:', error);
+        }
+      } catch (err) {
+        console.warn('Supabase profile role update exception:', err);
+      }
+    }
+
+    const roleLabel = newRole === 'admin' ? 'Administrador (admin)' : (newRole === 'client' ? 'Cliente (client)' : 'Desarrollador (developer)');
+    this.notificationService.success(
+      'Rol Actualizado', 
+      `El usuario "${target.fullName}" ahora tiene rol de ${roleLabel}.`
+    );
+
+    return true;
+  }
+
   async createAdmin(dto: CreateAdminDto): Promise<{ success: boolean; admin?: AdminUser; message?: string }> {
-    const tempId = 'admin-' + Date.now().toString(36);
+    const targetRole = dto.role || 'admin';
+    const tempId = 'usr-' + Date.now().toString(36);
     const client = this.supabaseService.getClient();
 
     let createdId = tempId;
@@ -120,7 +201,7 @@ export class UserManagementService {
           options: {
             data: {
               full_name: dto.fullName,
-              role: 'admin'
+              role: targetRole
             }
           }
         });
@@ -136,15 +217,15 @@ export class UserManagementService {
               id: createdId,
               email: dto.email,
               full_name: dto.fullName,
-              professional_title: dto.professionalTitle || 'Administrador del Sistema',
-              role: 'admin'
+              professional_title: dto.professionalTitle || (targetRole === 'admin' ? 'Administrador del Sistema' : 'Cliente / Usuario'),
+              role: targetRole
             }
           ]);
         } catch {
           // ignore
         }
       } catch (err: any) {
-        console.warn('Could not register in Supabase Auth immediately, creating local admin profile:', err);
+        console.warn('Could not register in Supabase Auth immediately, creating local user profile:', err);
       }
     }
 
@@ -152,8 +233,8 @@ export class UserManagementService {
       id: createdId,
       fullName: dto.fullName,
       email: dto.email,
-      professionalTitle: dto.professionalTitle || 'Administrador del Sistema',
-      role: 'admin',
+      professionalTitle: dto.professionalTitle || (targetRole === 'admin' ? 'Administrador del Sistema' : 'Cliente / Usuario'),
+      role: targetRole,
       provisionalPassword: dto.password,
       status: 'provisional_password',
       createdAt: new Date().toISOString()
@@ -161,7 +242,12 @@ export class UserManagementService {
 
     const updated = [newAdmin, ...this.admins()];
     this.saveAdmins(updated);
-    this.notificationService.success('Administrador Creado', `Usuario ${dto.fullName} registrado con clave provisional.`);
+    
+    const roleLabel = targetRole === 'admin' ? 'Administrador' : 'Cliente';
+    this.notificationService.success(
+      'Usuario Registrado', 
+      `Usuario ${dto.fullName} registrado como ${roleLabel} con clave provisional.`
+    );
 
     return { success: true, admin: newAdmin };
   }
@@ -177,11 +263,12 @@ export class UserManagementService {
 
     // Sync to Supabase profiles
     const client = this.supabaseService.getClient();
-    if (client && !id.startsWith('admin-')) {
+    if (client && !id.startsWith('admin-') && !id.startsWith('usr-')) {
       const dbUpdates: any = {};
       if (updates.fullName) dbUpdates.full_name = updates.fullName;
       if (updates.professionalTitle) dbUpdates.professional_title = updates.professionalTitle;
       if (updates.email) dbUpdates.email = updates.email;
+      if (updates.role) dbUpdates.role = updates.role;
       
       try {
         await client.from(this.supabaseService.config().tableNameProfiles || 'profiles')
@@ -192,7 +279,7 @@ export class UserManagementService {
       }
     }
 
-    this.notificationService.info('Perfil Actualizado', 'Los datos del administrador fueron guardados.');
+    this.notificationService.info('Perfil Actualizado', 'Los datos del usuario fueron guardados.');
   }
 
   async resetPassword(adminId: string, newPassword: string): Promise<boolean> {
@@ -239,7 +326,7 @@ export class UserManagementService {
 
     // Remove from Supabase profiles
     const client = this.supabaseService.getClient();
-    if (client && !id.startsWith('admin-')) {
+    if (client && !id.startsWith('admin-') && !id.startsWith('usr-')) {
       try {
         await client.from(this.supabaseService.config().tableNameProfiles || 'profiles')
           .delete()
@@ -249,6 +336,7 @@ export class UserManagementService {
       }
     }
 
-    this.notificationService.warning('Acceso Revocado', 'El usuario administrador fue eliminado del sistema.');
+    this.notificationService.warning('Acceso Revocado', 'El usuario fue eliminado del sistema.');
   }
 }
+
